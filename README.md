@@ -10,7 +10,7 @@ This repo is my dedicated space to build strong, production-grade skills through
 
 ---
 
-## Final 25 TypeScript + Node.js Projects (70% Systems + 30% Web)
+## Final 30 TypeScript + Node.js Projects (60% Systems + 25% Web + 15% Database)
 
 ### Beginner
 
@@ -29,73 +29,88 @@ This repo is my dedicated space to build strong, production-grade skills through
 - [ ] 5. **Local Key-Value Store**  
      Implement a persistent flat-file based key-value store with get, set, delete, and a simple index.
 
+- [ ] 6. **Postgres CLI with Prisma**  
+     Build a CLI tool that stores and queries structured records (like employee data) in a Postgres database using Prisma. Practice schema definition, type-safe queries, and running migrations from the command line.
+
 ### Intermediate
 
-- [ ] 6. **S3 Large File Manager**  
+- [ ] 7. **S3 Large File Manager**  
      Create a CLI and library for uploading and downloading large files to S3 with multipart uploads and progress tracking.
 
-- [ ] 7. **Hono File Upload API**  
+- [ ] 8. **Hono File Upload API**  
      Build a Hono API that accepts single and multiple file uploads and stores them locally or on S3.
 
-- [ ] 8. **Concurrent Downloader**  
+- [ ] 9. **Concurrent Downloader**  
      Download multiple large files in parallel using worker_threads with controlled concurrency and resume support.
 
-- [ ] 9. **Streaming Log Analyzer**  
-     Process large log files using Streams, detect patterns, count errors/warnings, and generate summary reports.
+- [ ] 10. **Streaming Log Analyzer**  
+      Process large log files using Streams, detect patterns, count errors/warnings, and generate summary reports.
 
-- [ ] 10. **Basic Job Queue System**  
+- [ ] 11. **Basic Job Queue System**  
       Implement a simple job orchestrator using BullMQ with retries, priorities, and logging.
+
+- [ ] 12. **Relational Schema & CSV Importer**  
+      Design a multi-table Postgres schema with foreign keys and relations using Prisma. Build a pipeline that reads CSV/JSON files and bulk-inserts them into the relational schema, handling migrations, upserts, and constraint violations.
 
 ### Intermediate-Advanced
 
-- [ ] 11. **Parallel Data Processor**  
+- [ ] 13. **Parallel Data Processor**  
       Build a system that processes large datasets using worker_threads with dynamic load balancing.
 
-- [ ] 12. **Kafka Sensor Data Simulator**  
+- [ ] 14. **Kafka Sensor Data Simulator**  
       Create a producer that generates and streams fake time-series data to Kafka at configurable rates using kafkajs.
 
-- [ ] 13. **Hono API with Pagination & Filtering**  
+- [ ] 15. **Hono API with Pagination & Filtering**  
       Build a Hono REST API that serves paginated, sorted, and time-range filtered data from files or S3.
 
-- [ ] 14. **Kafka Consumer with Windowed Aggregation**  
+- [ ] 16. **Kafka Consumer with Windowed Aggregation**  
       Consume data from Kafka, perform time-windowed aggregations, and store results efficiently.
 
-- [ ] 15. **Efficient Binary Storage Layer**  
+- [ ] 17. **Efficient Binary Storage Layer**  
       Implement time-series storage using zarrita.js (Zarr) with smart chunking and compression.
+
+- [ ] 18. **Database-Backed Query Service**  
+      Integrate Postgres into your Hono API using Prisma with connection pooling and transactions. Move pagination and filtering logic from the file layer to the database layer with proper indexing and query planning.
 
 ### Advanced
 
-- [ ] 16. **Real-time Data Pipeline**  
+- [ ] 19. **Real-time Data Pipeline**  
       Build an end-to-end pipeline: Sensor Simulator → Kafka → Consumer → Zarr Storage → Hono Query API.
 
-- [ ] 17. **Hono Log Ingestion Service**  
+- [ ] 20. **Hono Log Ingestion Service**  
       Create a Hono API that accepts logs via HTTP POST, parses, enriches, and stores them efficiently.
 
-- [ ] 18. **Observability Layer**  
+- [ ] 21. **Observability Layer**  
       Add structured logging, Prometheus metrics, and basic tracing across services.
 
-- [ ] 19. **Job Monitoring Dashboard**  
+- [ ] 22. **Job Monitoring Dashboard**  
       Build a simple Hono + HTMX dashboard to monitor job queues and pipeline health in real-time.
 
-- [ ] 20. **Rate Limiting & Authentication**  
+- [ ] 23. **Rate Limiting & Authentication**  
       Add rate limiting, JWT authentication, and API keys to your Hono APIs using middleware.
+
+- [ ] 24. **Time-Series Storage with Postgres**  
+      Add a Postgres time-series schema to the data pipeline with table partitioning by time range and BRIN indexes. Implement efficient bulk inserts from the Kafka consumer and benchmark time-range queries using EXPLAIN ANALYZE.
 
 ### Expert / Capstone
 
-- [ ] 21. **Full End-to-End Data Platform**  
+- [ ] 25. **Full End-to-End Data Platform**  
       Combine Kafka, worker threads, S3/Zarr storage, and Hono API into a complete mini data platform.
 
-- [ ] 22. **Advanced Hono API Features**  
+- [ ] 26. **Advanced Hono API Features**  
       Implement caching (Redis), OpenTelemetry tracing, and graceful shutdown in your main API.
 
-- [ ] 23. **Production-grade File Processing Service**  
+- [ ] 27. **Production-grade File Processing Service**  
       Build a robust service for large file upload, validation, processing, and status tracking via Hono API.
 
-- [ ] 24. **End-to-End Performance Optimization**  
+- [ ] 28. **End-to-End Performance Optimization**  
       Profile and optimize the entire platform (worker threads, chunk sizes, S3, Kafka, Hono routes) and document before/after results.
 
-- [ ] 25. **Deployable Production Platform**  
+- [ ] 29. **Deployable Production Platform**  
       Dockerize the full system (multiple services + Redis + Kafka), add health checks, environment config, and deployment scripts.
+
+- [ ] 30. **Production Database Operations**  
+      Implement zero-downtime schema migrations, configure read replicas, and profile slow queries using pg_stat_statements. Tune connection pool settings across the full platform and document before/after query performance metrics.
 
 ---
 
