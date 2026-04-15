@@ -4,6 +4,7 @@ import fs from "fs";
 import { readFile } from "fs/promises";
 import { Command } from "commander";
 import { parse } from "csv-parse/sync";
+import chalk from "chalk";
 
 const program = new Command();
 
@@ -21,7 +22,7 @@ program
 
     // Check does this file actually exist
     if (!fs.existsSync(filePath)) {
-      console.error(`Error: The file "${file}" does not exist.`);
+      console.error(chalk.red.bold(`Error: The file "${file}" does not exist.`));
       process.exit(1);
     }
 
@@ -30,12 +31,12 @@ program
 
     if (ext !== ".csv" && ext !== ".json") {
       console.error(
-        `Error: Unsupported file type "${ext}". Only .csv and .json are suported.`,
+        chalk.red.bold(`Error: Unsupported file type "${ext}". Only .csv and .json are suported.`),
       );
       process.exit(1);
     }
 
-    console.log(`Processing ${ext.toUpperCase()}...`);
+    console.log(chalk.blue(`\n🔍 Processing ${ext.toUpperCase()}: ${filePath}...`));
 
     try {
       /**
@@ -62,8 +63,8 @@ program
 
       // basic results about the analyzed data
       // before the following code executes, one must know that whether the input file is json or csv, data from both has been converted to an array format.
-      console.log("-----Analysis Result-----");
-      console.log(`Total Rows Found: ${data.length}`);
+      console.log(chalk.cyan.bold("\n----- Analysis Result -----"));
+      console.log(`${chalk.white("Total Rows Found:")} ${chalk.green.bold(data.length)}`);
 
       /**
        * Detect column name:
@@ -72,8 +73,8 @@ program
 
       const columns = data.length > 0 ? Object.keys(data[0]) : [];
 
-      console.log(`\n-----Schema Analysis-----`);
-      console.log(`columns found: ${columns.length} (${columns.join(", ")})`);
+      console.log(chalk.cyan.bold(`\n----- Schema Analysis -----`));
+      console.log(`${chalk.white("columns found:")} ${columns.length} (${columns.join(", ")})`);
 
       // Analyze every column, one by one
       columns.forEach((col) => {
@@ -121,12 +122,17 @@ program
         }
         const nullPercentage = ((nullCount / data.length) * 100).toFixed(1);
 
+        const typeDisplay = chalk.yellow.bold(detectedType.padEnd(7));
+        const nullDisplay = nullCount > 0 ? chalk.red.bold(nullCount) : chalk.green.bold(nullCount);
+
         console.log(
-          `[${col}]: ${nullCount} missing values (${nullPercentage}%)`,
+          `${chalk.blue.bold(`[${col.padEnd(10)}]`)} | Type: ${typeDisplay} | Missing: ${nullDisplay} (${nullPercentage}%)`,
         );
       });
+
+      console.log(chalk.green.bold(`\n✅ Analysis successfully completed!\n`));
     } catch (error: any) {
-      console.error(`Error reading or parsing file: ${error.message}`);
+      console.error(chalk.red.bold(`\n❌ Error reading or parsing file: ${error.message}`));
       process.exit(1);
     }
   });
