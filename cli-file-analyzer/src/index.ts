@@ -3,6 +3,7 @@ import path from "path";
 import fs from "fs";
 import {readFile} from "fs/promises";
 import {Command} from 'commander';
+import {parse} from "csv-parse/sync";
 
 const program  = new Command();
 
@@ -49,13 +50,45 @@ program
 
       // ensure that data is an array even if the JSON was just one object.
       data = Array.isArray(parsedData) ? parsedData : [parsedData];
-    } else{
-      console.log("CSV reading logic coming in the next step");
+    } else if(ext === ".csv"){
+      // Parse csv string into objects
+      data = parse(rawContent, {
+        columns: true,
+        skip_empty_lines: true
+      });
     }
 
     // basic results about the analyzed data
-    console.log("----Analysis Result----");
+    // before the following code executes, one must know that whether the input file is json or csv, data from both has been converted to an array format.
+    console.log("-----Analysis Result-----");
     console.log(`Total Rows Found: ${data.length}`);
+
+    /**
+     * Detect column name:
+     * We look at the first object in our array to see what the property names are
+     */
+
+    const columns = data.length > 0 ? Object.keys(data[0]) : [];
+
+    console.log(`\n-----Schema Analysis-----`);
+    console.log(`columns found: ${columns.length} (${columns.join(", ")})`);
+
+    // Analyze every column, one by one
+    columns.forEach(col =>{
+      let nullCount = 0;
+
+      // for this specific column, check every single row(object)
+      data.forEach(row => {
+        const value = row[col];
+
+        // in data engineering, we usually count null, undefined, or empty strings as 'missing'
+        if(value === null || value === undefined || value === "")
+          nullCount++;
+      })
+    const nullPercentage = ((nullCount / data.length) * 100).toFixed(1);
+
+    console.log(`[${col}]: ${nullCount} missing values (${nullPercentage}%)`);
+    })
   } catch (error: any) {
    console.error(`Error reading or parsing file: ${error.message}`);
    process.exit(1);

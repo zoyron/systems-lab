@@ -1,0 +1,426 @@
+id,name, email,Age,department,salary,city,joined_on,status,performance_score,notes
+229,Aditya Joshi,N/A,295,engineering,,Chennai,7/2/2015,,2.88,null
+389,rohan Nair,,N/A,HR,not disclosed, Pune,unknown,,4.03,null
+282,,N/A,twenty five,Design,1927679.00,Mumbai,unknown,ACTIVE,2.46,
+226,,divya226@techcorp,N/A,Marketing ,Rs.3020970,mumbai,,,1.57,GOOD PERFORMER
+304,kavya Gupta,  kavya304@techcorp.io ,-1,engineering,not disclosed,Delhi,26 Oct 2023,no,2.28,
+386,Ananya mehta,ananya386techcorp.io,755,Product,163k,Mumbai,2021-05-10,active,2.2,needs improvement
+256,Aditya Joshi,  aditya256@techcorp.io ,,Marketing ,3318835.00,mumbai,unknown,active,2.72,GOOD PERFORMER
+323,Sagar kumar,N/A,twenty five,HR,304k,Delhi,,,2.65,  
+28,kavya verma,kavya28@techcorp.io,twenty five,Product,,Hyderabad,,active,3.57,GOOD PERFORMER
+379,Neha Nair,neha379techcorp.io,N/A,DevOps,3609787.00, Pune,19/11/2023,,1.61,null
+330,POOJA Patel,N/A,813,Product,330k,Mumbai,17/6/2023,active,3.83,  
+308,Ananya SINGH,N/A,twenty five,Design,Rs.591279,Chennai,N/A,remote ,3.5,null
+93,rohan mehta,rohan93@techcorp,twenty five,Engineering,Rs.1503288,Kolkata,5-27-2015,ACTIVE,4.4,NULL
+40,Nikhil verma,nikhil40techcorp.io,36,Marketing ,,Delhi,24/5/2015,inactive,1.8,N/A
+75,shreya Sharma,,, Sales,not disclosed,Hyderabad,24 Nov 2018,ACTIVE,2.82,null
+183,rohan mehta,rohan183@techcorp,twenty five,HR,Rs.792546,DELHI,unknown,Active,,null
+176,,  rohan176@techcorp.io ,N/A, Sales,Rs.2328937,mumbai,2024/01/04,Active,1.86,NULL
+72,POOJA SINGH,N/A,-1,Marketing ,N/A,bangalore,,inactive,2.85,N/A
+221,vikram Reddy,  vikram221@techcorp.io ,N/A,Marketing ,Rs.1760693,Chennai,2017/11/21,N/A,2.0,needs improvement
+6,Neha SINGH,,370, Sales,, Pune,N/A,yes,1.6,
+97,riya Reddy,riya97techcorp.io,299,DevOps,1465334.00,Mumbai,unknown,Active,,Good performer
+81,Arjun verma,arjun81@techcorp,twenty five,DevOps,462855,Bangalore,10-4-2019,inactive,2.81,
+32,Sagar Gupta,sagar32@techcorp.io,34,Design,,Kolkata,,active,1.21,  
+8,POOJA mehta,,25,Product,N/A,Mumbai,1-19-2016,remote ,2.45,Good performer
+350,Karan Joshi,,363,Marketing ,not disclosed,Hyderabad,,N/A,3.13,GOOD PERFORMER
+119,riya Joshi,riya119techcorp.io,-1, Sales,N/A,bangalore,22/1/2022,remote ,2.64,needs improvement
+24,kavya kumar,kavya24@techcorp.io,,Design,174k, Pune,,inactive,1.0,needs improvement
+90,RAHUL Patel,N/A,twenty five,ENGINEERING,Rs.1934585,mumbai,2019/11/18,no,4.56,Good performer
+,rohan Reddy,,twenty five,Product,Rs.2607368,Mumbai,,active,,NULL
+142,Nikhil Nair,,twenty five,Marketing ,N/A,Hyderabad,8-22-2020,,3.12,Good performer
+190,RAHUL Sharma,rahul190@techcorp,41,Finance,,Hyderabad,26 Feb 2015,ACTIVE,3.72,
+140,Nikhil Joshi,N/A,twenty five,Product,,mumbai,16 Aug 2015,inactive,1.01,needs improvement
+246,vikram Sharma,  vikram246@techcorp.io ,N/A,HR,N/A,bangalore,N/A,remote ,1.7,N/A
+104,shreya Sharma,shreya104techcorp.io,568,Engineering,Rs.1315469,DELHI,25 Sep 2017,ACTIVE,1.32,GOOD PERFORMER
+156,divya Sharma,  divya156@techcorp.io ,864, Sales,2957630,Hyderabad,N/A,no,2.6,NULL
+131,rohan mehta,rohan131@techcorp,N/A,DevOps,,Mumbai,14 Mar 2024,,3.95,  
+80,POOJA kumar,,N/A,Marketing ,,Chennai,21/10/2021,N/A,2.21,needs improvement
+59,vikram kumar,vikram59@techcorp,-1,Engineering,N/A, Pune,,remote ,2.58,null
+107,RAHUL Gupta,rahul107techcorp.io,46,Design,N/A,Mumbai,2023-09-05,inactive,1.89,
+262,vikram SINGH,N/A,-1,Design,,Kolkata,2022/08/09,remote ,3.37,
+317,Nikhil SINGH,nikhil317@techcorp.io,222,Finance,Rs.1763109,bangalore,2/3/2016,,,  
+,,sneha252techcorp.io,N/A,Marketing ,,Hyderabad,2019-02-08,yes,4.08,N/A
+,divya mehta,divya380@techcorp,N/A,Engineering,1010068,bangalore,6-21-2020,no,4.25,null
+141,,  neha141@techcorp.io ,48,Finance,Rs.3193843,Hyderabad,N/A,inactive,3.17,NULL
+105,Suresh Joshi,suresh105@techcorp,N/A,Product,N/A,Hyderabad,N/A,N/A,3.56,NULL
+331,SNEHA mehta,,-1,Marketing ,1135099.00,mumbai,12-22-2018,inactive,2.97,null
+369,Neha Sharma,  neha369@techcorp.io ,-1,Finance,3705908,Kolkata,14 Jul 2015,remote ,3.92,GOOD PERFORMER
+192,Nikhil verma,N/A,twenty five,Finance,965985,Chennai,unknown,remote ,4.84,GOOD PERFORMER
+354,Karan SINGH,  karan354@techcorp.io ,N/A,DevOps,1455825.00, Pune,2021/05/21,,3.71,null
+220,Arjun verma,arjun220@techcorp,594, Sales,1284266.00,mumbai,2015-01-23,ACTIVE,2.72,Good performer
+,kavya Reddy,,-1, Sales,3189287,Chennai,2018/06/19,yes,3.51,Good performer
+361,Aditya Patel,  aditya361@techcorp.io ,twenty five,engineering,3353235.00,Mumbai,2024/03/01,no,3.64,  
+383,rohan Sharma,rohan383@techcorp,,ENGINEERING,,Bangalore,N/A,,4.13,Good performer
+,,,,,,,,,,
+362,SNEHA Sharma,N/A,,Finance,Rs.3502812,Mumbai,2024/05/05,yes,4.59,needs improvement
+311,shreya mehta,,, Sales,Rs.2537252,Hyderabad,5/5/2021,ACTIVE,4.36,
+41,rohan Joshi,rohan41techcorp.io,838,DevOps,not disclosed,Mumbai,2024-03-13,inactive,,
+212,Sagar Joshi,sagar212@techcorp,996,Finance,2397505.00,DELHI,,remote ,2.42,Good performer
+149,Neha Joshi,neha149@techcorp.io,-1,DevOps,not disclosed,Chennai,28/4/2021,N/A,1.87,
+344,SNEHA Joshi,N/A,723,Product,3905715.00,bangalore,4/11/2021,yes,2.23,
+26,Suresh mehta,,twenty five,DevOps,3859701.00, Pune,12-23-2021,remote ,3.27,Good performer
+366,divya Nair,N/A,twenty five,Engineering,,Kolkata,10-2-2021,N/A,2.69,needs improvement
+169,,N/A,twenty five,Marketing ,Rs.3037800,Kolkata,2019/05/27,N/A,2.91,N/A
+193,priya kumar,priya193@techcorp,801,HR,not disclosed,Mumbai,unknown,N/A,2.62,GOOD PERFORMER
+275,Karan mehta,N/A,655,Engineering,,Kolkata,,N/A,3.44,
+281,priya kumar,priya281@techcorp.io,N/A,DevOps,N/A,Delhi,4 Apr 2017,Active,4.52,null
+66,POOJA Nair,  pooja66@techcorp.io ,227,Product,N/A,Kolkata,10-6-2016,active,,GOOD PERFORMER
+372,riya SINGH,  riya372@techcorp.io ,377,Design,Rs.3977192,bangalore,,ACTIVE,3.1,N/A
+161,Arjun SINGH,,N/A,Engineering,Rs.3374869,bangalore,unknown,,4.98,N/A
+51,Manish Patel,manish51@techcorp,N/A, Sales,1588251,Bangalore,unknown,active,4.99,null
+14,RAHUL Nair,rahul14@techcorp,N/A,Product,N/A,bangalore,9-14-2019,active,2.42,NULL
+357,Suresh verma,suresh357@techcorp,twenty five,HR,3255175.00,Chennai,2020-08-12,inactive,1.92,NULL
+207,Karan Sharma,karan207techcorp.io,203,ENGINEERING,,Kolkata,2023-10-26,active,2.87,NULL
+293,Aditya Gupta,,N/A,Finance,not disclosed,Delhi,,N/A,2.09,Good performer
+64,,  suresh64@techcorp.io ,941,HR,,mumbai,8/3/2022,,1.16,null
+,kavya mehta,N/A,twenty five,HR,1882991.00,Chennai,7 Jun 2016,Active,1.71,  
+273,Sagar verma,,-1, Sales,not disclosed,Chennai,2020/02/02,,3.62,  
+,Amit Nair,amit122@techcorp.io,22,Product,323k, Pune,19 Mar 2023,yes,1.58,GOOD PERFORMER
+74,POOJA Patel,  pooja74@techcorp.io ,N/A,Product,Rs.3075885,Hyderabad,unknown,yes,3.0,  
+219,Manish Nair,  manish219@techcorp.io ,37,Marketing ,198k,DELHI,N/A,inactive,,GOOD PERFORMER
+325,POOJA Joshi,pooja325techcorp.io,388,HR,,Hyderabad,,yes,2.6,needs improvement
+258,kavya Patel,kavya258@techcorp.io,819,HR,not disclosed, Pune,2016-10-12,active,1.09,N/A
+267,Nikhil kumar,nikhil267@techcorp.io,-1,engineering,Rs.1023126,Mumbai,unknown,Active,3.84,
+,,,,,,,,,,
+,riya Reddy,riya150techcorp.io,-1,Finance,200k,Kolkata,2022-06-08,inactive,4.95,Good performer
+170,Neha verma,N/A,,Marketing ,1039451.00,Chennai,2017-11-27,N/A,4.33,needs improvement
+147,SNEHA verma,N/A,939,Engineering,220k, Pune,2020-10-04,inactive,1.77,NULL
+210,shreya Reddy,shreya210@techcorp,,Design,N/A,Mumbai,26 Apr 2022,,4.02,  
+237,Amit Nair,,twenty five,Marketing ,2588996,Kolkata,10-13-2019,,2.65,  
+285,Suresh Patel,suresh285techcorp.io,twenty five,engineering,N/A,Chennai,11-5-2018,,4.73,GOOD PERFORMER
+44,Sagar mehta,,24,Finance,Rs.3769444,mumbai,,N/A,3.47,  
+276,RAHUL Patel,rahul276@techcorp,428,Product,Rs.1488694,Kolkata,unknown,remote ,4.87,N/A
+17,shreya Nair,shreya17@techcorp,-1,Product,3923214,Hyderabad,3 Jun 2022,yes,,  
+46,Neha Reddy,,45,HR,,mumbai,N/A,ACTIVE,4.53,GOOD PERFORMER
+13,priya mehta,priya13@techcorp.io,,Engineering,not disclosed,DELHI,N/A,ACTIVE,1.52,Good performer
+16,divya Nair,divya16@techcorp.io,,Design,, Pune,N/A,remote ,1.8,  
+299,SNEHA Joshi,sneha299@techcorp.io,879,Finance,1134799.00,Kolkata,9-13-2022,Active,4.04,NULL
+33,Neha SINGH,neha33techcorp.io,N/A, Sales,N/A, Pune,2018-12-03,yes,4.01,  
+191,Karan Patel,  karan191@techcorp.io ,43,Engineering,N/A,bangalore,21/10/2016,inactive,1.2,null
+,Manish Patel,N/A,-1, Sales,124k,mumbai,11-11-2015,active,4.13,
+45,divya kumar,N/A,,engineering,,Bangalore,2021/08/05,ACTIVE,,  
+217,RAHUL Patel,N/A,54,HR,702568.00,Mumbai,27/11/2023,remote ,3.45,GOOD PERFORMER
+280,,N/A,-1,HR,3179067,Bangalore,2016-04-22,,,needs improvement
+132,vikram Reddy,  vikram132@techcorp.io ,460,DevOps,3899201.00,Bangalore,2015-10-20,inactive,1.15,null
+367,rohan Nair,rohan367@techcorp,N/A,Design,265k,mumbai,8-15-2021,Active,1.96,Good performer
+15,riya Nair,N/A,,HR,Rs.478453,Kolkata,3-6-2015,no,1.48,Good performer
+162,riya Patel,riya162techcorp.io,N/A,engineering,Rs.416492,bangalore,15 Oct 2024,active,1.84,null
+364,Karan Reddy,N/A,-1,Product,Rs.469583,bangalore,unknown,ACTIVE,,NULL
+222,Manish Sharma,manish222techcorp.io,,Marketing ,3732790,Mumbai,N/A,N/A,,GOOD PERFORMER
+243,SNEHA Patel,sneha243techcorp.io,,Product,Rs.2750380,Hyderabad,2021-05-23,inactive,1.29,NULL
+158,Suresh Reddy,suresh158techcorp.io,52,Design,, Pune,,ACTIVE,3.23,GOOD PERFORMER
+224,Amit mehta,amit224@techcorp.io,,Design,N/A,DELHI,unknown,,,GOOD PERFORMER
+29,Suresh Patel,  suresh29@techcorp.io ,-1,ENGINEERING,71k,mumbai,,remote ,2.86,GOOD PERFORMER
+30,Manish SINGH,,496,engineering,,Delhi,19/2/2018,ACTIVE,2.05,null
+67,Suresh Patel,suresh67@techcorp.io,,Engineering,675839.00,Kolkata,27/4/2020,yes,1.82,GOOD PERFORMER
+,,,,,,,,,,
+301,Karan kumar,,-1,DevOps,1591119.00,mumbai,12/12/2024,N/A,3.13,null
+26,Suresh mehta,,twenty five,DevOps,3859701.00, Pune,12-23-2021,remote ,3.27,Good performer
+171,RAHUL mehta,rahul171@techcorp.io,twenty five,HR,2586711,Bangalore,15/5/2021,no,3.92,
+355,SNEHA Sharma,sneha355@techcorp,N/A,Engineering,371k,Mumbai,5 May 2023,N/A,2.47,GOOD PERFORMER
+157,Sagar Sharma,sagar157techcorp.io,-1,Marketing ,Rs.791952,DELHI,N/A,yes,3.72,
+49,Karan Sharma,karan49@techcorp.io,-1,Product,,Kolkata,1/11/2019,N/A,2.47,
+163,Arjun Joshi,arjun163techcorp.io,,Engineering,not disclosed,bangalore,unknown,Active,3.57,needs improvement
+313,,  karan313@techcorp.io ,N/A,ENGINEERING,651277.00,Kolkata,8 Apr 2015,Active,4.33,  
+245,kavya mehta,kavya245@techcorp.io,twenty five,Engineering,not disclosed,Chennai,6 Apr 2024,,4.59,
+54,Suresh mehta,  suresh54@techcorp.io ,,DevOps,,DELHI,unknown,remote ,2.44,
+48,shreya SINGH,shreya48techcorp.io,34, Sales,Rs.1431585,mumbai,2022-01-04,no,1.92,NULL
+260,divya Patel,divya260techcorp.io,,Product,not disclosed,mumbai,20 Dec 2022,,2.7,Good performer
+232,Aditya Reddy,,42,Marketing ,Rs.3129729,Mumbai,24/8/2024,no,1.14,NULL
+116,Nikhil Gupta,nikhil116@techcorp,39,Finance,not disclosed,DELHI,unknown,remote ,2.99,
+18,RAHUL Patel,rahul18techcorp.io,,Finance,,DELHI,unknown,remote ,2.69,null
+37,shreya mehta,shreya37@techcorp.io,233,Finance,, Pune,8/8/2022,inactive,3.09,GOOD PERFORMER
+326,Ananya mehta,ananya326techcorp.io,51,Product,N/A,DELHI,2020/05/26,no,3.41,
+86,Ananya Joshi,ananya86techcorp.io,-1,engineering,N/A,Hyderabad,unknown,,1.19,NULL
+309,POOJA SINGH,  pooja309@techcorp.io ,-1,ENGINEERING,Rs.1174112,Delhi,19/6/2018,,3.54,NULL
+348,,riya348@techcorp,N/A,engineering,295k,Chennai,18/7/2023,active,1.69,N/A
+342,priya Sharma,priya342@techcorp.io,452,Engineering,2116282,Hyderabad,unknown,N/A,3.13,
+334,Aditya Gupta,N/A,212,Design,N/A, Pune,16/2/2021,yes,2.99,needs improvement
+391,shreya Joshi,  shreya391@techcorp.io ,N/A,Finance,N/A, Pune,2024-04-03,remote ,3.3,
+99,vikram Sharma,vikram99@techcorp.io,N/A,HR,,Mumbai,2016-03-11,inactive,2.2,NULL
+85,divya Joshi,divya85@techcorp,N/A, Sales,66k,Bangalore,N/A,remote ,4.49,null
+388,,suresh388techcorp.io,-1,engineering,209k,Bangalore,2017-03-26,Active,4.93,null
+353,divya Joshi,divya353techcorp.io,851,DevOps,N/A,Chennai,24 Mar 2024,,1.09,  
+255,,  rohan255@techcorp.io ,403, Sales,284k,Kolkata,,N/A,1.42,GOOD PERFORMER
+332,Ananya Gupta,ananya332@techcorp.io,,Finance,718802,Chennai,unknown,inactive,4.12,needs improvement
+34,Aditya Sharma,aditya34@techcorp,N/A,Design,,Delhi,unknown,Active,1.65,N/A
+236,Nikhil kumar,nikhil236@techcorp,929,engineering,93k,mumbai,3-28-2019,yes,,needs improvement
+321,kavya Sharma,,27,ENGINEERING,741801.00,mumbai,20/4/2023,ACTIVE,4.88,NULL
+231,shreya Patel,shreya231techcorp.io,N/A,Marketing ,,Bangalore,2017-09-01,no,1.13,N/A
+197,Karan verma,N/A,N/A, Sales,,Bangalore,unknown,remote ,1.24,NULL
+345,Amit Gupta,N/A,-1,ENGINEERING,2498334.00,Mumbai,2021-12-26,,4.28,null
+82,Ananya mehta,  ananya82@techcorp.io ,-1,Design,N/A,mumbai,4/11/2022,,4.31,NULL
+91,Arjun Sharma,  arjun91@techcorp.io ,N/A,Design,,Kolkata,2015/06/12,no,1.58,GOOD PERFORMER
+365,Aditya SINGH,  aditya365@techcorp.io ,-1,DevOps,2345155,bangalore,N/A,Active,2.76,GOOD PERFORMER
+269,Karan verma,,459,Product,Rs.502632,DELHI,N/A,active,3.49,Good performer
+94,Karan Nair,,twenty five,Product,,Chennai,2018-05-19,yes,1.35,null
+23,Nikhil Joshi,N/A,,Product,,bangalore,1/3/2015,,1.22,needs improvement
+227,Arjun mehta,N/A,36,Design,106k, Pune,,N/A,3.09,GOOD PERFORMER
+86,Ananya Joshi,ananya86techcorp.io,-1,engineering,N/A,Hyderabad,unknown,,1.19,NULL
+53,priya Reddy,N/A,N/A,Design,1078700,Hyderabad,4-10-2022,active,2.93,Good performer
+35,kavya Joshi,kavya35techcorp.io,,HR,86k, Pune,N/A,,1.81,Good performer
+100,RAHUL Joshi,rahul100@techcorp.io,692,ENGINEERING,2251302,Chennai,6 Jan 2018,Active,4.47,
+266,,  sagar266@techcorp.io ,N/A,Design,,Mumbai,2016-04-07,ACTIVE,1.91,Good performer
+234,Ananya kumar,ananya234@techcorp,232,ENGINEERING,1839335,Kolkata,2020-03-08,ACTIVE,2.03,NULL
+71,Aditya Patel,aditya71@techcorp.io,-1,engineering,,Hyderabad,2016-07-21,N/A,2.05,
+279,Sagar Gupta,sagar279techcorp.io,N/A,DevOps,,Delhi,11-22-2023,N/A,1.76,  
+385,Karan Reddy,karan385@techcorp.io,29,engineering,204k,Chennai,2016/08/18,,3.16,NULL
+90,RAHUL Patel,N/A,twenty five,ENGINEERING,Rs.1934585,mumbai,2019/11/18,no,4.56,Good performer
+352,riya Gupta,,-1,Engineering,not disclosed,bangalore,14 Apr 2022,no,2.88,N/A
+284,rohan mehta,rohan284@techcorp.io,,engineering,,bangalore,2022-01-08,no,1.96,Good performer
+44,Sagar mehta,,24,Finance,Rs.3769444,mumbai,,N/A,3.47,  
+200,Aditya Gupta,aditya200@techcorp,-1,Marketing ,986719,DELHI,12-17-2019,,3.35,needs improvement
+20,Arjun Patel,,,HR,293k,mumbai,1-26-2019,yes,2.08,Good performer
+264,kavya mehta,kavya264@techcorp,,Marketing ,244k,Kolkata,N/A,ACTIVE,2.61,
+96,rohan Sharma,rohan96@techcorp.io,847,engineering,345k,Bangalore,1/10/2023,active,4.48,NULL
+240,Karan mehta,  karan240@techcorp.io ,twenty five,ENGINEERING,3039719.00,Bangalore,7 Nov 2023,inactive,4.4,  
+225,Manish Sharma,N/A,939,HR,3283746,Bangalore,7-14-2019,no,4.51,NULL
+79,POOJA Joshi,pooja79@techcorp.io,twenty five,HR,not disclosed,Hyderabad,5-25-2022,no,4.4,  
+137,shreya Joshi,N/A,26,Finance,not disclosed,bangalore,2024/05/04,yes,4.14,null
+223,,  shreya223@techcorp.io ,-1,engineering,1605397.00,Mumbai,23/7/2019,ACTIVE,3.46,
+204,POOJA mehta,pooja204techcorp.io,601,Marketing ,not disclosed, Pune,11-10-2021,inactive,1.26,needs improvement
+381,Amit Gupta,amit381techcorp.io,twenty five,HR,N/A, Pune,,ACTIVE,4.2,  
+315,divya mehta,,519,engineering,,Hyderabad,2024/09/27,,2.63,needs improvement
+129,Manish kumar,manish129@techcorp.io,31, Sales,1142589.00,Delhi,22/4/2020,Active,2.45,  
+92,Karan Patel,,-1,Marketing ,not disclosed,Kolkata,2020-10-24,ACTIVE,2.23,needs improvement
+128,POOJA Reddy,N/A,432,ENGINEERING,N/A,bangalore,13 Apr 2023,ACTIVE,1.49,GOOD PERFORMER
+115,,N/A,N/A,Finance,2026916.00,Chennai,25/12/2020,remote ,4.84,
+387,Suresh kumar,  suresh387@techcorp.io ,682,Finance,3994250,Chennai,2024-06-06,no,1.92,null
+179,shreya Joshi,shreya179techcorp.io,twenty five,HR,N/A,mumbai,N/A,active,4.18,  
+127,Karan SINGH,karan127@techcorp.io,,ENGINEERING,2685334.00,DELHI,15 Aug 2023,ACTIVE,1.87,needs improvement
+,kavya Patel,,,DevOps,,Bangalore,2015-09-07,,,
+,priya Nair,priya205@techcorp,,DevOps,3707096.00,DELHI,22 Apr 2017,remote ,2.13,Good performer
+349,priya mehta,  priya349@techcorp.io ,41,ENGINEERING,Rs.1761908,mumbai,N/A,active,2.61,  
+202,kavya mehta,kavya202techcorp.io,N/A,HR,not disclosed,Hyderabad,N/A,yes,2.15,GOOD PERFORMER
+394,POOJA Joshi,,33,engineering,2299701,Delhi,unknown,no,2.51,
+78,Suresh Gupta,,47,engineering,not disclosed,bangalore,4 May 2024,,4.76,N/A
+186,Manish Joshi,manish186@techcorp,47,Engineering,,DELHI,N/A,Active,3.65,
+69,Amit Sharma,amit69techcorp.io,N/A,DevOps,, Pune,2016-06-16,remote ,3.86,GOOD PERFORMER
+181,Aditya SINGH,aditya181techcorp.io,,ENGINEERING,3661262,Chennai,26/4/2016,active,3.64,  
+265,Amit verma,amit265@techcorp.io,691,Finance,306k, Pune,2023/06/21,Active,2.55,  
+110,Nikhil Reddy,,N/A,Marketing ,,Kolkata,2020-07-28,N/A,4.83,null
+126,Karan mehta,karan126techcorp.io,N/A,engineering,,mumbai,N/A,remote ,1.76,  
+395,Suresh mehta,suresh395techcorp.io,-1,ENGINEERING,not disclosed,Delhi,unknown,remote ,2.75,
+182,,  shreya182@techcorp.io ,,Finance,2841320.00,bangalore,,,4.37,
+189,Neha kumar,N/A,N/A,DevOps,Rs.753689,Delhi,2018-10-25,inactive,,null
+346,Ananya mehta,,twenty five,engineering,,Delhi,2021/06/19,yes,1.43,GOOD PERFORMER
+121,Amit Gupta,,N/A,HR,Rs.2517651,Mumbai,N/A,active,1.04,Good performer
+374,priya SINGH,,,Design,3240180.00,Mumbai,22/11/2024,active,,  
+111,,rohan111@techcorp.io,55,Marketing ,2216303,Delhi,2017/07/13,active,4.54,Good performer
+360,RAHUL SINGH,rahul360techcorp.io,45, Sales,316k,Hyderabad,N/A,,4.32,N/A
+113,priya Joshi,,,Design,Rs.2821560,mumbai,2023/05/27,inactive,1.8,null
+376,Suresh Gupta,suresh376@techcorp.io,36,engineering,Rs.2001663,Hyderabad,5-8-2020,remote ,1.72,GOOD PERFORMER
+146,,N/A,N/A,engineering,N/A,Delhi,N/A,ACTIVE,4.37,Good performer
+43,Sagar verma,sagar43@techcorp.io,N/A,Design,3847751,Chennai,2018/06/18,inactive,3.95,NULL
+,vikram Sharma,,-1,Finance,3908724,mumbai,N/A,Active,3.02,Good performer
+53,priya Reddy,N/A,N/A,Design,1078700,Hyderabad,4-10-2022,active,2.93,Good performer
+195,POOJA Joshi,pooja195@techcorp.io,twenty five,Finance,Rs.3172432,mumbai,2018-11-21,yes,1.74,  
+270,shreya Nair,,-1,Marketing ,1018516.00,Mumbai,2023/09/05,ACTIVE,1.63,Good performer
+12,Karan Gupta,,,Finance,not disclosed,bangalore,unknown,inactive,1.71,null
+,,,,,,,,,,
+312,Aditya Reddy,N/A,53,Product,2263556, Pune,,inactive,1.69,null
+206,POOJA kumar,  pooja206@techcorp.io ,N/A,engineering,N/A,Bangalore,,Active,3.28,GOOD PERFORMER
+184,RAHUL SINGH,N/A,497,Marketing ,Rs.3547275,Chennai,20/5/2019,inactive,2.08,N/A
+384,Karan mehta,,-1,HR,not disclosed,Chennai,2023-09-05,N/A,4.31,needs improvement
+175,POOJA mehta,  pooja175@techcorp.io ,-1,DevOps,,Hyderabad,2022/03/03,yes,3.05,Good performer
+373,POOJA kumar,pooja373techcorp.io,-1,DevOps,130k, Pune,unknown,ACTIVE,,  
+319,Nikhil SINGH,,-1,HR,1569290,Chennai,2019/04/05,yes,2.1,
+292,Nikhil mehta,N/A,40,Finance,Rs.1972856, Pune,,,3.83,  
+215,vikram mehta,vikram215@techcorp,908,DevOps,,mumbai,unknown,inactive,3.97,Good performer
+139,RAHUL kumar,rahul139@techcorp,,Marketing ,3914074.00,Bangalore,2/1/2018,yes,4.78,NULL
+144,Manish verma,  manish144@techcorp.io ,-1,Design,,Delhi,23/10/2023,remote ,3.27,needs improvement
+109,Arjun kumar,N/A,39,engineering,Rs.974429,Delhi,2017/11/19,yes,4.3,needs improvement
+244,RAHUL verma,  rahul244@techcorp.io ,,DevOps,N/A,Hyderabad,7 Jan 2017,Active,2.83,  
+286,kavya mehta,,twenty five,ENGINEERING,N/A,Mumbai,4 Jan 2020,remote ,1.92,N/A
+187,Karan Patel,karan187@techcorp.io,,Design,Rs.846842,Chennai,18/9/2019,N/A,1.66,Good performer
+96,rohan Sharma,rohan96@techcorp.io,847,engineering,345k,Bangalore,1/10/2023,active,4.48,NULL
+298,RAHUL SINGH,,,engineering,3142570.00,Hyderabad,19 Jun 2018,yes,3.08,  
+250,divya Gupta,N/A,N/A, Sales,2933575.00,Bangalore,23 Jul 2022,ACTIVE,4.66,NULL
+268,,suresh268@techcorp.io,32,Engineering,Rs.3370771,mumbai,3-4-2022,inactive,3.69,N/A
+151,Neha Patel,N/A,-1,DevOps,2615215, Pune,unknown,Active,2.13,N/A
+62,Ananya Gupta,ananya62@techcorp,twenty five,ENGINEERING,Rs.801833,Bangalore,2021-05-01,remote ,3.38,NULL
+263,kavya Patel,,26,Marketing ,not disclosed,Hyderabad,2017-08-28,active,3.91,null
+1,,N/A,-1,Engineering,,Hyderabad,unknown,active,1.5,N/A
+27,,  riya27@techcorp.io ,307,Finance,not disclosed, Pune,2018-08-09,no,3.99,GOOD PERFORMER
+21,priya kumar,priya21@techcorp.io,324,Engineering,N/A,DELHI,23 Sep 2015,Active,2.05,
+,Karan Sharma,karan303techcorp.io,47,Finance,Rs.2381149,mumbai,,remote ,3.45,
+154,Ananya Reddy,ananya154techcorp.io,N/A, Sales,Rs.684151,Bangalore,9-1-2019,,1.08,Good performer
+145,priya Joshi,N/A,twenty five,HR,N/A,DELHI,16/10/2018,ACTIVE,3.48,needs improvement
+148,Sagar Reddy,,N/A,ENGINEERING,not disclosed,Hyderabad,,no,,null
+,vikram Sharma,,-1,Finance,3908724,mumbai,N/A,Active,3.02,Good performer
+173,Amit Nair,amit173@techcorp,38,HR,Rs.2469433,Hyderabad,N/A,active,2.5,Good performer
+7,,N/A,N/A,Engineering,N/A,Kolkata,2020-03-23,no,4.12,needs improvement
+5,,  sneha5@techcorp.io ,-1,Finance,237k,Mumbai,6/6/2022,no,,  
+400,POOJA SINGH,pooja400@techcorp.io,twenty five,DevOps,not disclosed,Mumbai,25 Mar 2016,inactive,4.99,needs improvement
+238,priya Sharma,  priya238@techcorp.io ,209,Finance,,bangalore,3 Jul 2018,remote ,4.85,N/A
+152,Neha verma,  neha152@techcorp.io ,twenty five,Product,1869809,bangalore,N/A,inactive,4.99,
+397,Ananya Gupta,ananya397techcorp.io,N/A,Product,not disclosed, Pune,,active,4.24,GOOD PERFORMER
+57,Arjun Patel,  arjun57@techcorp.io ,54,HR,508449.00,mumbai,23/12/2024,inactive,4.54,  
+251,RAHUL Nair,rahul251techcorp.io,twenty five,ENGINEERING,Rs.2981010,bangalore,2018-11-14,active,3.3,Good performer
+8,POOJA mehta,,25,Product,N/A,Mumbai,1-19-2016,remote ,2.45,Good performer
+307,Ananya Joshi,N/A,twenty five,Design,N/A,Chennai,10-28-2024,yes,2.86,NULL
+180,Ananya SINGH,,945,Product,2219156.00,mumbai,28/3/2015,no,4.69,
+241,vikram verma,N/A,24,DevOps,2643328,mumbai,3 Mar 2015,active,1.7,N/A
+67,Suresh Patel,suresh67@techcorp.io,,Engineering,675839.00,Kolkata,27/4/2020,yes,1.82,GOOD PERFORMER
+201,Karan Patel,,N/A,Finance,388k,Hyderabad,2020/07/26,,4.7,NULL
+363,Nikhil Sharma,,twenty five,ENGINEERING,Rs.3634321, Pune,unknown,,1.96,NULL
+274,Karan SINGH,N/A,-1,Design,not disclosed,Chennai,1-24-2016,,,
+124,riya verma,,, Sales,2843862,Kolkata,2018-04-08,ACTIVE,4.42,null
+398,Sagar mehta,  sagar398@techcorp.io ,50,DevOps,3336715,DELHI,,remote ,2.15,null
+87,Suresh Sharma,N/A,,DevOps,not disclosed,Chennai,2-22-2017,active,1.4,Good performer
+322,SNEHA Reddy,sneha322@techcorp.io,twenty five, Sales,1680575,Hyderabad,23 Oct 2016,,2.16,needs improvement
+108,vikram verma,vikram108@techcorp.io,twenty five,Product,N/A,Chennai,2023/04/23,Active,1.38,
+73,kavya SINGH,N/A,,Product,348k,DELHI,,Active,3.63,N/A
+382,priya SINGH,priya382@techcorp.io,-1,HR,1157457,DELHI,2-22-2018,no,4.23,Good performer
+287,Nikhil kumar,,, Sales,N/A,Bangalore,,N/A,2.6,needs improvement
+314,Aditya Patel,,, Sales,878488,bangalore,2016/08/23,active,1.84,Good performer
+84,priya Patel,priya84@techcorp.io,23,Marketing ,,DELHI,unknown,ACTIVE,4.45,null
+306,shreya Nair,shreya306techcorp.io,43,ENGINEERING,1811689,Kolkata,,,3.94,GOOD PERFORMER
+302,Neha Gupta,neha302@techcorp,N/A,Product,Rs.415375, Pune,,inactive,3.82,
+218,Arjun Nair,  arjun218@techcorp.io ,twenty five,Product,3803891.00,Chennai,23 Feb 2018,yes,3.45,GOOD PERFORMER
+52,Ananya mehta,ananya52@techcorp.io,360,engineering,247k,Chennai,2017-03-01,remote ,4.23,needs improvement
+211,,sagar211@techcorp,twenty five,HR,Rs.2739387,Kolkata,10/6/2020,active,3.77,needs improvement
+310,Amit mehta,amit310techcorp.io,N/A,Design,N/A,Kolkata,11-5-2024,,1.38,needs improvement
+130,Ananya verma,ananya130techcorp.io,933,Design,not disclosed,DELHI,N/A,N/A,1.1,NULL
+320,Suresh Nair,suresh320techcorp.io,-1,Engineering,,Bangalore,23/8/2024,Active,1.44,  
+214,divya Gupta,,,Product,N/A,DELHI,2018/08/15,Active,3.88,NULL
+99,vikram Sharma,vikram99@techcorp.io,N/A,HR,,Mumbai,2016-03-11,inactive,2.2,NULL
+208,rohan kumar,rohan208techcorp.io,,Product,1581571.00,Kolkata,1 Dec 2023,ACTIVE,,  
+336,divya kumar,N/A,twenty five,Engineering,not disclosed,Kolkata,2017/10/24,,3.13,  
+102,shreya Patel,shreya102@techcorp,-1,Design,,mumbai,16/8/2020,ACTIVE,1.23,N/A
+143,Ananya SINGH,ananya143@techcorp.io,-1,Marketing ,N/A,Delhi,,Active,4.87,N/A
+340,RAHUL Patel,rahul340techcorp.io,N/A, Sales,,Bangalore,10-18-2019,ACTIVE,2.49,
+289,Neha Patel,  neha289@techcorp.io ,,DevOps,873479.00,bangalore,,N/A,4.32,needs improvement
+103,Manish Joshi,manish103@techcorp,N/A,Product,,DELHI,12-10-2015,active,3.03,
+295,divya mehta,,,ENGINEERING,3389652,Delhi,1-28-2020,active,1.77,null
+178,POOJA kumar,,twenty five,Engineering,1994785.00,Hyderabad,10 May 2023,ACTIVE,,null
+228,rohan Patel,rohan228@techcorp.io,,Product,not disclosed,Chennai,2/1/2019,yes,1.94,Good performer
+88,Karan Patel,karan88techcorp.io,389,Engineering,not disclosed,Kolkata,2015-08-19,Active,2.68,needs improvement
+60,SNEHA mehta,sneha60techcorp.io,43,Finance,1364888,Bangalore,N/A,active,1.89,  
+,rohan Reddy,,twenty five,Product,Rs.2607368,Mumbai,,active,,NULL
+,Neha SINGH,,656,DevOps,3639461,DELHI,,remote ,4.86,GOOD PERFORMER
+27,,  riya27@techcorp.io ,307,Finance,not disclosed, Pune,2018-08-09,no,3.99,GOOD PERFORMER
+101,shreya verma,shreya101@techcorp.io,N/A,Marketing ,not disclosed,bangalore,2017-06-08,ACTIVE,3.21,
+9,priya SINGH,priya9techcorp.io,N/A,Finance,,Chennai,5/2/2019,N/A,2.91,
+36,Nikhil mehta,,39,Finance,not disclosed, Pune,26 Nov 2023,Active,1.99,needs improvement
+272,Suresh Sharma,suresh272techcorp.io,N/A,ENGINEERING,319k,mumbai,unknown,Active,4.63,needs improvement
+194,rohan Gupta,,N/A,Finance,,Hyderabad,2021/10/10,ACTIVE,1.85,null
+98,Manish Gupta,manish98@techcorp.io,twenty five,engineering,not disclosed,mumbai,2023/07/06,ACTIVE,1.94,N/A
+343,POOJA verma,  pooja343@techcorp.io ,419,Marketing ,3078009.00,Chennai,20/7/2019,Active,3.27,needs improvement
+95,priya SINGH,priya95techcorp.io,528,HR,Rs.1246702,mumbai,N/A,N/A,3.07,
+164,divya Sharma,  divya164@techcorp.io ,,HR,not disclosed,mumbai,11/1/2015,Active,2.95,
+3,riya Sharma,N/A,N/A,Finance,Rs.2300793,DELHI,,remote ,2.37,NULL
+61,Suresh mehta,suresh61@techcorp.io,,DevOps,3139335,Kolkata,N/A,remote ,3.33,
+288,,priya288@techcorp,38, Sales,Rs.3254005,mumbai,2022/10/26,,,NULL
+233,Neha SINGH,neha233@techcorp,26,ENGINEERING,452892,Chennai,2020/09/28,inactive,1.87,NULL
+257,vikram Nair,  vikram257@techcorp.io ,,DevOps,not disclosed,Hyderabad,21/7/2017,yes,2.21,null
+63,Suresh Nair,suresh63@techcorp.io,-1,Engineering,2102840,mumbai,18 Oct 2015,ACTIVE,3.07,needs improvement
+358,,ananya358techcorp.io,320,ENGINEERING,not disclosed,mumbai,unknown,ACTIVE,3.33,null
+338,rohan Joshi,rohan338techcorp.io,,HR,N/A,Bangalore,1-4-2022,active,3.19,GOOD PERFORMER
+339,divya Gupta,divya339techcorp.io,24,Finance,2443456.00,mumbai,,inactive,1.22,  
+58,vikram SINGH,vikram58techcorp.io,-1,Design,N/A,Chennai,9 Oct 2018,N/A,1.8,needs improvement
+242,Sagar Sharma,sagar242@techcorp,N/A,engineering,,Chennai,2/6/2019,,1.37,Good performer
+42,Nikhil Sharma,,42,engineering,not disclosed, Pune,unknown,N/A,2.77,GOOD PERFORMER
+120,Manish Reddy,,611,DevOps,not disclosed,mumbai,N/A,Active,3.05,GOOD PERFORMER
+351,Manish Gupta,manish351techcorp.io,209, Sales,,Delhi,,inactive,2.4,NULL
+253,Arjun Patel,arjun253techcorp.io,N/A, Sales,Rs.3921967, Pune,2020-11-27,N/A,1.69,null
+305,Karan Joshi,karan305@techcorp.io,-1,DevOps,not disclosed,DELHI,2019-02-06,active,1.92,GOOD PERFORMER
+159,Karan Patel,karan159@techcorp.io,,engineering,N/A,DELHI,10-12-2019,ACTIVE,4.42,
+259,kavya Joshi,kavya259@techcorp,846,Engineering,348k,Kolkata,14 Apr 2019,remote ,1.22,Good performer
+10,kavya Sharma,kavya10techcorp.io,-1,Engineering,3096589.00,mumbai,9-12-2019,N/A,3.13,null
+76,SNEHA verma,,456,Finance,N/A,DELHI,2020/01/13,Active,,N/A
+166,SNEHA verma,sneha166@techcorp.io,N/A,Design,not disclosed,Chennai,N/A,yes,4.5,  
+168,,  suresh168@techcorp.io ,twenty five,Finance,N/A,Mumbai,2022/12/21,remote ,3.18,needs improvement
+,riya kumar,riya185@techcorp.io,,Design,,Chennai,N/A,ACTIVE,4.33,GOOD PERFORMER
+135,Amit Patel,  amit135@techcorp.io ,twenty five,Product,Rs.2561666,bangalore,3-23-2019,inactive,4.26,needs improvement
+213,Ananya kumar,,364,ENGINEERING,not disclosed,Kolkata,2023-07-01,Active,1.17,GOOD PERFORMER
+70,,riya70@techcorp,40,Engineering,not disclosed,DELHI,,ACTIVE,1.86,N/A
+167,POOJA mehta,pooja167@techcorp,979, Sales,Rs.1000001,Kolkata,unknown,inactive,3.65,GOOD PERFORMER
+125,Sagar Joshi,,twenty five, Sales,,Bangalore,2021-12-16,inactive,,
+134,Nikhil Nair,,twenty five,HR,1086591.00,Delhi,2023-05-08,ACTIVE,2.65,N/A
+2,riya Sharma,riya2@techcorp,,Design,N/A,Bangalore,6/11/2023,inactive,3.19,GOOD PERFORMER
+248,shreya Gupta,,747,Marketing ,,mumbai,3-2-2019,Active,3.48,  
+396,Ananya SINGH,ananya396@techcorp.io,26,Finance,not disclosed,Chennai,2015-07-03,remote ,1.11,
+196,divya Patel,N/A,515,Marketing ,1194600.00,DELHI,2021-09-01,ACTIVE,1.98,  
+359,Aditya verma,,N/A,Engineering,N/A, Pune,2016/12/28,inactive,1.4,
+133,Ananya Gupta,  ananya133@techcorp.io ,-1,Product,,Chennai,2020/12/17,remote ,,N/A
+399,Sagar verma,,736,engineering,3794921.00,mumbai,unknown,Active,3.13,N/A
+4,Amit Reddy,,N/A,ENGINEERING,2450859, Pune,N/A,no,2.82,GOOD PERFORMER
+347,Amit Nair,,784,ENGINEERING,N/A,Hyderabad,N/A,no,1.15,NULL
+254,,N/A,547,Finance,149k,bangalore,4/2/2018,N/A,4.61,Good performer
+83,Aditya Nair,aditya83@techcorp,452,ENGINEERING,1072587.00,bangalore,2022/12/19,,2.5,needs improvement
+11,rohan Reddy,rohan11@techcorp,twenty five,Product,not disclosed,Mumbai,,inactive,4.83,NULL
+68,Arjun Sharma,  arjun68@techcorp.io ,twenty five,Design,810462.00,Delhi,unknown,,,  
+328,POOJA Sharma,,twenty five, Sales,,Bangalore,19/1/2018,no,3.33,GOOD PERFORMER
+337,Sagar Patel,sagar337@techcorp.io,twenty five,ENGINEERING,,Delhi,N/A,ACTIVE,4.12,GOOD PERFORMER
+114,shreya Nair,shreya114techcorp.io,N/A,Product,N/A,Hyderabad,6 Jun 2015,N/A,2.97,  
+58,vikram SINGH,vikram58techcorp.io,-1,Design,N/A,Chennai,9 Oct 2018,N/A,1.8,needs improvement
+38,,shreya38@techcorp,36,Design,not disclosed,Hyderabad,,remote ,1.77,  
+393,divya Sharma,divya393@techcorp,,engineering,Rs.3313053,Delhi,19/8/2016,N/A,4.98,
+65,SNEHA Sharma,,N/A,Product,47k,Delhi,N/A,inactive,2.31,N/A
+1,,N/A,-1,Engineering,,Hyderabad,unknown,active,1.5,N/A
+333,rohan Gupta,,-1,Engineering,,Delhi,2018-06-01,Active,4.41,NULL
+188,kavya kumar,,,HR,2504686,Mumbai,19 Dec 2022,inactive,,
+283,Karan Gupta,karan283@techcorp,31,DevOps,103k, Pune,2024/10/04,yes,4.0,Good performer
+300,priya kumar,priya300@techcorp.io,26,ENGINEERING,N/A,Chennai,N/A,ACTIVE,3.11,GOOD PERFORMER
+297,Ananya Sharma,ananya297@techcorp,,Product,N/A,bangalore,N/A,remote ,3.41,NULL
+327,Manish Patel,N/A,417,Marketing ,not disclosed, Pune,,,,N/A
+341,rohan Sharma,rohan341techcorp.io,N/A,engineering,2357490.00, Pune,4/8/2017,N/A,1.72,N/A
+296,kavya verma,N/A,N/A,Engineering,1990827.00,Mumbai,N/A,N/A,1.14,N/A
+371,Arjun Joshi,arjun371@techcorp,-1,ENGINEERING,not disclosed,Bangalore,,,1.85,
+247,shreya Sharma,N/A,twenty five,Finance,not disclosed,mumbai,2024/07/14,Active,3.67,N/A
+390,Nikhil Sharma,nikhil390techcorp.io,25,Product,,mumbai,,N/A,,GOOD PERFORMER
+277,RAHUL mehta,  rahul277@techcorp.io ,962,Product,N/A,Delhi,17/3/2019,remote ,4.56,
+112,Arjun Reddy,arjun112techcorp.io,24,Design,Rs.2582317,Mumbai,N/A,ACTIVE,3.38,  
+155,POOJA Joshi,N/A,,Engineering,941125,Kolkata,2020-12-05,inactive,3.57,Good performer
+31,Neha Reddy,neha31@techcorp.io,436,Finance,,Chennai,5-24-2021,yes,2.26,null
+239,Karan Gupta,karan239techcorp.io,twenty five,Product,Rs.874363,Hyderabad,21/7/2024,no,4.77,null
+261,Aditya Sharma,aditya261@techcorp.io,N/A,Finance,150k,Hyderabad,4-8-2018,yes,2.74,  
+136,vikram Patel,,twenty five,Design,451889,Mumbai,7/5/2019,,1.45,null
+230,Manish Sharma,  manish230@techcorp.io ,-1, Sales,861572,Delhi,N/A,inactive,2.91,NULL
+,,,,,,,,,,
+,shreya verma,N/A,686,HR,Rs.747811,DELHI,2015-07-01,Active,4.43,N/A
+235,Aditya Nair,aditya235techcorp.io,37,Design,Rs.1025577,Kolkata,6 Jan 2020,yes,3.34,NULL
+324,Suresh Reddy,,,ENGINEERING,3796086.00, Pune,2-9-2015,N/A,3.46,N/A
+30,Manish SINGH,,496,engineering,,Delhi,19/2/2018,ACTIVE,2.05,null
+329,rohan Joshi,rohan329techcorp.io,-1,Engineering,not disclosed,Chennai,unknown,ACTIVE,2.85,null
+77,vikram SINGH,N/A,,Finance,3724266.00,bangalore,2023/06/14,inactive,1.74,GOOD PERFORMER
+177,Arjun SINGH,arjun177@techcorp.io,, Sales,360k,bangalore,9-1-2018,remote ,2.05,null
+138,Sagar Gupta,  sagar138@techcorp.io ,,engineering,506086.00,Hyderabad,5-12-2017,remote ,4.71,
+123,Sagar verma,,827,Engineering,N/A,bangalore,N/A,,2.07,GOOD PERFORMER
+203,,  sneha203@techcorp.io ,-1,Marketing ,1513678,Kolkata,,ACTIVE,4.87,GOOD PERFORMER
+216,rohan verma,rohan216@techcorp.io,24, Sales,N/A,Kolkata,5-2-2021,no,,GOOD PERFORMER
+290,SNEHA Patel,sneha290@techcorp.io,-1, Sales,3164169.00,Bangalore,unknown,Active,1.01,Good performer
+392,shreya Gupta,N/A,,Engineering,Rs.787487,Bangalore,10-28-2022,active,1.11,null
+117,Nikhil kumar,,909,Design,, Pune,N/A,active,4.4,NULL
+271,kavya Nair,kavya271techcorp.io,twenty five,Product,379k,Chennai,N/A,yes,4.97,N/A
+318,Amit Nair,amit318@techcorp.io,26,Marketing ,not disclosed, Pune,2021/02/04,,2.78,GOOD PERFORMER
+65,SNEHA Sharma,,N/A,Product,47k,Delhi,N/A,inactive,2.31,N/A
+370,riya SINGH,riya370techcorp.io,-1,ENGINEERING,not disclosed,mumbai,1/10/2020,,3.49,null
+19,,N/A,twenty five,Engineering,304k, Pune,26 Feb 2016,Active,,  
+106,priya Sharma,priya106@techcorp,,DevOps,not disclosed,bangalore,2024-10-28,N/A,2.78,GOOD PERFORMER
+17,shreya Nair,shreya17@techcorp,-1,Product,3923214,Hyderabad,3 Jun 2022,yes,,  
+316,Ananya Sharma,N/A,-1,engineering,734923,Mumbai,11-16-2019,inactive,1.52,  
+356,kavya Patel,,N/A,HR,,Kolkata,2019/09/06,no,1.54,  
+375,kavya verma,,447,HR,3559798,Bangalore,N/A,remote ,1.4,N/A
+45,divya kumar,N/A,,engineering,,Bangalore,2021/08/05,ACTIVE,,  
+368,Neha Sharma,,,Product,,Chennai,2-8-2021,N/A,3.37,NULL
+25,priya Joshi,priya25@techcorp,54,engineering,,Kolkata,,,1.34,
+249,priya Gupta,,twenty five,Engineering,N/A,mumbai,unknown,ACTIVE,2.55,needs improvement
+64,,  suresh64@techcorp.io ,941,HR,,mumbai,8/3/2022,,1.16,null
+278,Aditya Joshi,aditya278techcorp.io,767,DevOps,215k,Hyderabad,,N/A,3.19,null
+160,kavya Sharma,,twenty five,Marketing ,275k,Mumbai,2016-11-24,Active,4.65,null
+,rohan SINGH,  rohan55@techcorp.io ,N/A,engineering,2707084.00,Bangalore,19 May 2021,yes,2.47,NULL
+50,,  arjun50@techcorp.io ,N/A, Sales,134k,mumbai,2018/01/26,remote ,2.63,needs improvement
+47,SNEHA Reddy,,,ENGINEERING,Rs.2333254, Pune,,,3.95,N/A
+40,Nikhil verma,nikhil40techcorp.io,36,Marketing ,,Delhi,24/5/2015,inactive,1.8,N/A
+198,,  aditya198@techcorp.io ,770,Finance,not disclosed,Kolkata,2022/01/11,ACTIVE,,  
+291,Karan verma,karan291techcorp.io,-1,HR,,bangalore,12 Jun 2017,,1.51,Good performer
+209,Nikhil Gupta,  nikhil209@techcorp.io ,27, Sales,Rs.2547846,Mumbai,,Active,3.3,needs improvement
+118,POOJA Joshi,pooja118@techcorp,789,DevOps,1758396.00,Kolkata,unknown,active,,  
+294,divya Gupta,N/A,N/A,Product,not disclosed,DELHI,12 Feb 2022,,1.17,
+199,Neha SINGH,neha199@techcorp.io,twenty five,DevOps,Rs.1578060,Bangalore,unknown,Active,3.71,needs improvement
+378,Amit kumar,amit378@techcorp.io,, Sales,317k,bangalore,3-15-2017,no,1.51,needs improvement
+174,Amit mehta,amit174techcorp.io,444,DevOps,not disclosed,Kolkata,22 Feb 2020,N/A,1.32,NULL
+22,Ananya kumar,ananya22@techcorp,-1,ENGINEERING,1534653,Mumbai,17 Dec 2015,remote ,4.74,GOOD PERFORMER
