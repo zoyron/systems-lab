@@ -27,7 +27,7 @@ productsRoute.get("/", (c) => {
 
 // GET /all route - returns a list of all the products
 productsRoute.get("/all", (c) => {
-  return c.json(products);
+  return c.json({ success: true, data: products });
 });
 
 // GET /:id - returns a single product by id
@@ -35,10 +35,10 @@ productsRoute.get("/:id", (c) => {
   const id = Number(c.req.param("id"));
   const product = products.find((p) => p.id === id);
   if (!product) {
-    return c.json({ message: "Product not found" }, 404);
+    return c.json({ success: false, message: "Product not found" }, 404);
   }
 
-  return c.json(product);
+  return c.json({ success: true, data: product });
 });
 
 export default productsRoute;

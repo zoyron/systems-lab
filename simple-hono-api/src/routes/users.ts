@@ -25,7 +25,7 @@ const users: User[] = [
 const usersRoute = new Hono();
 
 usersRoute.get("/", (c) => {
-  return c.json(users);
+  return c.json({ success: true, data: users });
 });
 
 // GET /:id route for users
@@ -35,10 +35,10 @@ usersRoute.get("/:id", (c) => {
   const user = users.find((u) => u.id === id);
 
   if (!user) {
-    return c.json({ message: "User not found" }, 404);
+    return c.json({ success: false, message: "User not found" }, 404);
   }
 
-  return c.json(user);
+  return c.json({ success: true, data: user });
 });
 
 export default usersRoute;
