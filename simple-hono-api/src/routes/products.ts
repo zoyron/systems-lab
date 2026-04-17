@@ -35,7 +35,7 @@ productsRoute.get("/:id", (c) => {
   const id = Number(c.req.param("id"));
   const product = products.find((p) => p.id === id);
   if (!product) {
-    return c.json({ mesasge: "Product not found" }, 404);
+    return c.json({ message: "Product not found" }, 404);
   }
 
   return c.json(product);

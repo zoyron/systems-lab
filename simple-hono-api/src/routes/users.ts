@@ -35,7 +35,7 @@ usersRoute.get("/:id", (c) => {
   const user = users.find((u) => u.id === id);
 
   if (!user) {
-    return c.json({ mesasge: "User not found" }, 404);
+    return c.json({ message: "User not found" }, 404);
   }
 
   return c.json(user);
