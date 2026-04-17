@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
 import usersRoute from "./routes/users.js";
+import productsRoute from "./routes/products.js";
 
 // create a Hono instance
 const app = new Hono();
@@ -11,8 +12,11 @@ app.get("/", (c) => {
   return c.text("Hello world from Hono server!");
 });
 
-// usersRoute
+// usersRoute mounting
 app.route("/users", usersRoute);
+
+// productsRoute mounting
+app.route("/products", productsRoute);
 
 // Start the server on port 3000
 serve({
