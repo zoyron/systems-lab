@@ -20,7 +20,7 @@ This repo is my dedicated space to build strong, production-grade skills through
 - [ ] 2. **Streaming File Processor**  
      Process large CSV/JSON files using Node.js Streams for cleaning and transformation without loading the entire file into memory.
 
-- [ ] 3. **Simple Hono API**  
+- [x] 3. **Simple Hono API**  
      Create a basic REST API using Hono with a few GET routes serving static or mock data (with proper TypeScript and Zod validation).
 
 - [ ] 4. **File Chunker Utility**  
