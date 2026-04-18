@@ -17,11 +17,11 @@ This repo is my dedicated space to build strong, production-grade skills through
 - [x] 1. **CLI File Analyzer**  
      Build a robust CLI tool that analyzes any JSON or CSV file and outputs schema info, row count, null counts, type detection, and basic statistics.
 
-- [ ] 2. **Streaming File Processor**  
-     Process large CSV/JSON files using Node.js Streams for cleaning and transformation without loading the entire file into memory.
-
-- [ ] 3. **Simple Hono API**  
+- [x] 2. **Simple Hono API**  
      Create a basic REST API using Hono with a few GET routes serving static or mock data (with proper TypeScript and Zod validation).
+
+- [ ] 3. **Streaming File Processor**  
+     Process large CSV/JSON files using Node.js Streams for cleaning and transformation without loading the entire file into memory.
 
 - [ ] 4. **File Chunker Utility**  
      Build a CLI tool that splits large files into fixed-size or line-based chunks, processes them independently, and supports recombination.
