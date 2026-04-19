@@ -13,13 +13,14 @@
   "license": "ISC",
   "dependencies": {
     "@hono/node-server": "^1.19.14",
+    "@prisma/client": "^5.22.0",
     "hono": "^4.12.14",
     "openai": "^6.34.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/node": "^25.6.0",
-    "prisma": "^7.7.0",
+    "prisma": "^5.22.0",
     "tsx": "^4.21.0",
     "typescript": "^6.0.3"
   }
