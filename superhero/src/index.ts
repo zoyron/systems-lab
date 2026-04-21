@@ -1,23 +1,22 @@
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
+import { PrismaClient } from "../generated/prisma/index.js";
+
+// create one prisma client insteance for the whole app
+// never create a new prisma client inside each request - it's expensive
+const prisma = new PrismaClient();
 
 const app = new Hono();
 
 app.get("/", (c) => {
-  return c.text("Superhero Name Generator API");
+  return c.text("SuperHero Name Generator API");
 });
 
-app.get("/hero", (c) => {
-  // Read the "name" query parameter from the url
-  // this is different from route parameter because /users/1 was a separate route entire, but /hero?name=sagar takes you to the hero page only, but just with a different parameter. the route remains the same as the hero, unlike route parameters where /users/1 is a different route from /users/2
-  // in this situation /hero?name=sagar is the same route as /hero?name=alice
-
+// This handler is async now because in this request we will be dealing with the database
+// that requires disk IO operations. so when nodejs makes the disc calls, using this async await method, sync stuff in the stack will be allowed to run
+// and when all the sync work in the stack is done, we'll go back to the event look to execute this handler
+app.get("/hero", async (c) => {
   const name = c.req.query("name");
-
-  /**
-   * If no name was provided, return a 400(Bad request) error
-   * 400 means "you sent a bad request - something is missing or wrong"
-   */
   if (!name) {
     return c.json({
       success: false,
@@ -25,13 +24,31 @@ app.get("/hero", (c) => {
     });
   }
 
-  // for now, just echoing back the name
-  return c.json({ success: true, received: name });
+  /**
+   * Normalize:lowercase + trim whitespace
+   * Sagar, sagar, SAGAR, SAGar, or any combinaiton of this name becomes "sagar"
+   */
+  const normalizedName = name.trim().toLowerCase();
+
+  // Ask prisma to find a hero with this exact originalName
+  const existingHero = await prisma.hero.findUnique({
+    where: { originalName: normalizedName },
+  });
+
+  // cache hit, this name exists in the db
+  if (existingHero) {
+    return c.json({ success: true, source: "database", data: existingHero });
+  }
+
+  // cache miss - name is new, OpenAi comes in next step
+
+  return c.json({
+    success: true,
+    source: "not_generated_yet",
+    name: normalizedName,
+  });
 });
 
-serve({
-  fetch: app.fetch,
-  port: 3000,
-});
+serve({ fetch: app.fetch, port: 3000 });
 
 console.log("Server running at http://localhost:3000");
