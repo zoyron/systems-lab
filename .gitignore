@@ -45,3 +45,6 @@ Thumbs.db
 .pnpm-store/
 .npm/
 .yarn/
+
+# Data related files
+data/
