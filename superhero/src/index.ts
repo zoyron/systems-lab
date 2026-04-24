@@ -1,55 +1,62 @@
+import "dotenv/config";
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
-import { PrismaClient } from "../generated/prisma/index.js";
-
-// create one prisma client insteance for the whole app
-// never create a new prisma client inside each request - it's expensive
-const prisma = new PrismaClient();
+import { prisma } from "./lib/prisma.js";
+import { generateHero } from "./lib/openai.js";
 
 const app = new Hono();
 
 app.get("/", (c) => {
-  return c.text("SuperHero Name Generator API");
+  return c.text("SuperHero Name Generator API — try GET /hero?name=yourname");
 });
 
-// This handler is async now because in this request we will be dealing with the database
-// that requires disk IO operations. so when nodejs makes the disc calls, using this async await method, sync stuff in the stack will be allowed to run
-// and when all the sync work in the stack is done, we'll go back to the event look to execute this handler
 app.get("/hero", async (c) => {
   const name = c.req.query("name");
+
   if (!name) {
     return c.json(
-      {
-        success: false,
-        message: "Please provide a name using ?name=yourname",
-      },
+      { success: false, message: "Please provide a name using ?name=yourname" },
       400,
     );
   }
 
-  /**
-   * Normalize:lowercase + trim whitespace
-   * Sagar, sagar, SAGAR, SAGar, or any combinaiton of this name becomes "sagar"
-   */
   const normalizedName = name.trim().toLowerCase();
 
-  // Ask prisma to find a hero with this exact originalName
+  // Check database first — free and instant
   const existingHero = await prisma.hero.findUnique({
     where: { originalName: normalizedName },
   });
 
-  // cache hit, this name exists in the db
   if (existingHero) {
     return c.json({ success: true, source: "database", data: existingHero });
   }
 
-  // cache miss - name is new, OpenAi comes in next step
+  // Not in DB — call OpenAI and persist the result
+  try {
+    const generated = await generateHero(normalizedName);
 
-  return c.json({
-    success: true,
-    source: "not_generated_yet",
-    name: normalizedName,
+    const hero = await prisma.hero.create({
+      data: {
+        originalName: normalizedName,
+        superheroName: generated.superheroName,
+        description: generated.description,
+        nameMeaning: generated.nameMeaning,
+      },
+    });
+
+    return c.json({ success: true, source: "generated", data: hero });
+  } catch (err) {
+    console.error("Generation failed:", err);
+    return c.json({ success: false, message: "Failed to generate hero" }, 500);
+  }
+});
+
+// Return all heroes stored in the database
+app.get("/heroes", async (c) => {
+  const heroes = await prisma.hero.findMany({
+    orderBy: { createdAt: "desc" },
   });
+  return c.json({ success: true, data: heroes });
 });
 
 serve({ fetch: app.fetch, port: 3000 });
