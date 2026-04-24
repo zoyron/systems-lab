@@ -18,10 +18,13 @@ app.get("/", (c) => {
 app.get("/hero", async (c) => {
   const name = c.req.query("name");
   if (!name) {
-    return c.json({
-      success: false,
-      message: "Please provide a name using ?name=yourname",
-    });
+    return c.json(
+      {
+        success: false,
+        message: "Please provide a name using ?name=yourname",
+      },
+      400,
+    );
   }
 
   /**
