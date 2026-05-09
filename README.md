@@ -116,7 +116,7 @@ This repo is my dedicated space to build strong, production-grade skills through
 
 ## Supplementary Projects (Gap Coverage)
 
-These fill gaps in the main 30: testing, auth depth, queue semantics, real-time, distributed systems patterns, and a product-shaped capstone. Each item says *when* to build it relative to the main list — respect the prereqs so you're not learning three new concepts at once.
+These fill gaps in the main 30: testing, auth depth, queue semantics, real-time, distributed systems patterns, memory management, and a product-shaped capstone. Each item says *when* to build it relative to the main list — respect the prereqs so you're not learning three new concepts at once.
 
 ### Baselines (practices, not standalone deliverables)
 
@@ -173,6 +173,38 @@ These fill gaps in the main 30: testing, auth depth, queue semantics, real-time,
 - [ ] D2. **Distributed Lock with Redis (Redlock)** (Advanced)  
      Coordinate cron jobs or leader election across multiple instances. Document the correctness caveats honestly — Redlock is contested in the literature.  
      *Build after: Project 26 and Project 29. Don't attempt before Project 26 — Redis fluency required, and you need a multi-instance scenario to justify it.*
+
+### Memory Management & Buffer Control
+
+The goal of this section is not just writing code that doesn't leak — it's developing an instinct for *where* leaks happen and *why*. In every project here, instrument your work: track `process.memoryUsage().heapUsed` before and after operations, take V8 heap snapshots and diff them, and deliberately cause the failure mode first before fixing it. Seeing the heap misbehave and then correcting it teaches more than the correct implementation alone.
+
+- [ ] M1. **Bounded Ring Buffer** (Beginner)  
+     Implement a fixed-size circular buffer from scratch — no libraries. When full, new writes overwrite the oldest entry. Track head/tail pointers manually and expose `read`, `write`, `isFull`, and `isEmpty` methods with full test coverage. The point is not the data structure itself but forcing you to reason about fixed memory slots and what "capacity" really means at a low level.  
+     *Build after: Project 3. Don't attempt before streams — you need the mental model of bounded data flow first.*
+
+- [ ] M2. **Streaming Token Accumulator** (Beginner-Intermediate)  
+     Hit a real streaming LLM API (Anthropic or OpenAI) and accumulate response chunks into a buffer. Track heap usage in real time using `process.memoryUsage()`. First, deliberately do it wrong — never evict, let the buffer grow unbounded, and observe the heap climb. Then fix it with a configurable size cap that drops oldest chunks when exceeded. Document the before/after heap graphs in the README.  
+     *Build after: M1 and Project 3. You need ring buffer intuition and stream familiarity before this.*
+
+- [ ] M3. **Backpressure-aware Transform Pipeline** (Intermediate)  
+     Build a fast producer (tight loop generating random data) piped into a slow consumer (artificial write delay simulating a TUI renderer or disk). Without backpressure, the buffer between them explodes. Implement correct `pause()`/`resume()` handling — or a proper Node.js Transform stream — so the producer slows to match the consumer. Measure peak memory with and without backpressure. This is the exact same problem as a fast LLM stream feeding a slow terminal renderer.  
+     *Build after: M2 and Project 10. Don't attempt before you're comfortable with Node.js Streams internals.*
+
+- [ ] M4. **Sliding Window Context Manager** (Intermediate)  
+     Build a class that holds a conversation history but enforces a strict token budget. When the budget is exceeded, it evicts the oldest messages first — but always preserves the system prompt. Expose methods for `add`, `evict`, `totalTokens`, and `snapshot`. Write property-based tests that prove the budget is never exceeded regardless of message sequence. This is the core of what every AI coding agent does with its context window.  
+     *Build after: M2. Don't attempt before you've dealt with unbounded accumulation in M2 — the eviction logic only makes sense once you've felt the problem.*
+
+- [ ] M5. **Unbounded Process Output Handler** (Intermediate)  
+     Spawn a child process that produces a large or infinite stream of output (`find /`, a log tail, or a synthetic generator). Read its stdout without buffering the whole thing — process line by line, apply a filter, and drop what you don't need. Then deliberately do it wrong first: buffer everything into an array and watch memory spike. The contrast is the lesson. Add a configurable max-lines cap that signals the child process to stop via `SIGTERM` when exceeded.  
+     *Build after: M3 and Project 9. You need child process and stream fluency before this.*
+
+- [ ] M6. **Session Memory Manager with Disk Spillover** (Intermediate-Advanced)  
+     Build a multi-session store where each session has a configurable memory budget. When a session goes idle (no activity for N seconds) or the total store exceeds its budget, serialize the session to disk (SQLite or flat JSON) and free the in-memory buffer. When accessed again, deserialize from disk transparently. Benchmark the serialize/deserialize round-trip latency and document the tradeoff between memory savings and access cost. This is almost exactly what opencode does with SQLite for session persistence.  
+     *Build after: M4, M5, and Project 5. Don't attempt before M4 — you need the context manager mental model first.*
+
+- [ ] M7. **Heap Snapshot Diff Tool** (Advanced)  
+     Build a CLI tool that takes two V8 heap snapshots (using the `v8` module or `--inspect` protocol) of a running process, diffs them, and reports which object types grew, by how much, and which allocation sites are responsible. Run it against a deliberately leaky version of M2 or M5 to confirm it catches the leak. This is a tooling project — the output is the diagnostic capability, not a feature. Real-world memory debugging almost always requires a tool like this.  
+     *Build after: M5 and Project 21 (Observability Layer). You need observability intuition before building observability tooling.*
 
 ### Product-Shaped Capstone
 
