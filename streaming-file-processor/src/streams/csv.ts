@@ -21,9 +21,9 @@ export function pipeCsvThrough(inputPath: string, outputPath: string): void {
 
   // write errors at each step
   readStream.on("error", (err) => console.error("Read error:", err.message));
-  csvParser.on("error", (err) => console.error("Read error:", err.message));
+  csvParser.on("error", (err) => console.error("Parse error:", err.message));
   csvStringifier.on("error", (err) =>
-    console.error("Read error:", err.message),
+    console.error("Stringify error:", err.message),
   );
-  writeStream.on("error", (err) => console.error("Read error:", err.message));
+  writeStream.on("error", (err) => console.error("Write error:", err.message));
 }

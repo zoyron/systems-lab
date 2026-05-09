@@ -114,6 +114,45 @@ This repo is my dedicated space to build strong, production-grade skills through
 
 ---
 
+## Additional C++ Projects (High-Performance & Inference Track)
+
+### Intermediate
+
+- [ ] **High-Performance Lock-Free Ring Buffer** **(C++)**  
+     Implement a fixed-size circular buffer with atomic operations, cache-line padding, and support for single/multi producer/consumer patterns. Benchmark throughput and compare with `std::deque` + mutex. (C++)
+
+### Intermediate-Advanced
+
+- [ ] **Zero-Copy CSV/JSON Parser** **(C++)**  
+     Build a high-speed streaming parser using memory mapping (`mmap`), SIMD instructions where possible, and minimal allocations. Compare performance (speed & memory) with Node.js streams. (C++)
+
+- [ ] **Custom Memory Allocator + Arena** **(C++)**  
+     Implement a fast arena allocator and a slab allocator. Use them in a small data structure and measure allocation/deallocation performance vs default `new`/`delete`. (C++)
+
+### Advanced
+
+- [ ] **Lock-Free MPMC Queue** **(C++)**  
+     Build a multi-producer multi-consumer lock-free queue using atomics. Benchmark against moodycamel or `std::queue` with mutexes under high contention. (C++)
+
+- [ ] **SIMD-Accelerated Data Transformation** **(C++)**  
+     Implement vectorized operations (SSE/AVX) for filtering, parsing, or aggregation on large arrays of data. Compare performance with scalar version and measure cache efficiency. (C++)
+
+- [ ] **Persistent LSM-Tree Style Key-Value Store** **(C++)**  
+     Build a minimal LSM-tree based KV store (inspired by LevelDB/RocksDB). Focus on write-ahead log, SSTables, and basic compaction logic. (C++)
+
+### Expert / Capstone
+
+- [ ] **GPU-Aware Memory Manager + Basic CUDA Kernel** **(C++/CUDA)**  
+     Write a simple CUDA kernel (matrix multiplication or reduction) and integrate it with host C++ code. Manage pinned memory, CUDA streams, and measure kernel performance. (C++/CUDA)
+
+- [ ] **Custom Inference Serving Component** **(C++/CUDA)**  
+     Build a minimal continuous-batching + PagedAttention style KV cache manager (even with dummy tensors). Focus on memory layout, kernel fusion, and efficient token handling for inference. (C++/CUDA)
+
+- [ ] **Ultra Low-Latency Order Book / Market Data Handler** **(C++)**  
+     Parse FIX/ITCH market data feed with zero-copy techniques + lock-free structures. Target sub-microsecond critical path (HFT-style exercise). (C++)
+
+---
+
 ## Supplementary Projects (Gap Coverage)
 
 These fill gaps in the main 30: testing, auth depth, queue semantics, real-time, distributed systems patterns, memory management, and a product-shaped capstone. Each item says *when* to build it relative to the main list — respect the prereqs so you're not learning three new concepts at once.
