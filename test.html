@@ -7,7 +7,11 @@
 <style>
   :root { color-scheme: dark; }
   * { margin: 0; padding: 0; box-sizing: border-box; }
-  html, body { width: 100%; height: 100%; overflow: hidden; background: #05060d; }
+  html, body {
+    width: 100%; height: 100%; overflow: hidden;
+    background: radial-gradient(ellipse at center,
+      #0a1024 0%, #050818 45%, #01020a 80%, #000003 100%);
+  }
   #app { position: fixed; inset: 0; }
   .ui {
     position: fixed; left: 0; right: 0; bottom: 28px;
@@ -134,12 +138,13 @@ function sampleTorus() {
 // ---------------------------------------------------------------------------
 const app = document.getElementById('app');
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x05060d);
+scene.background = null; // let the CSS radial gradient show through
 
 const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 100);
 camera.position.set(0, 0, 4.6);
 
-const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+renderer.setClearColor(0x000000, 0); // transparent — CSS gradient shows behind
 renderer.setSize(innerWidth, innerHeight);
 const pixelRatio = Math.min(devicePixelRatio, 1.5);
 renderer.setPixelRatio(pixelRatio);
@@ -185,7 +190,7 @@ geometry.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1));
 const uniforms = {
   uTime:       { value: 0 },
   uMorph:      { value: 0 },
-  uSize:       { value: 9.0 },
+  uSize:       { value: 13.0 },
   uScatter:    { value: SCATTER },
   uPixelRatio: { value: pixelRatio },
 };
@@ -239,16 +244,17 @@ const material = new THREE.ShaderMaterial({
       // perspective size attenuation — kept small so particles stay crisp,
       // not screen-filling quads. hard clamp guards against blow-ups up close.
       float size = uSize * (1.0 + burst * 0.6);
-      gl_PointSize = clamp(size * uPixelRatio / -mvPosition.z, 1.0, 14.0);
+      gl_PointSize = clamp(size * uPixelRatio / -mvPosition.z, 1.5, 20.0);
 
-      // color: cool when formed, igniting warm/hot during the burst
-      vec3 cold = vec3(0.18, 0.55, 1.0);
-      vec3 warm = vec3(0.95, 0.30, 0.85);
-      vec3 hot  = vec3(1.0,  0.85, 0.45);
+      // color: cool when formed, igniting warm/hot during the burst.
+      // punchy, saturated endpoints so they pop against the dark background.
+      vec3 cold = vec3(0.25, 0.85, 1.0);   // bright cyan
+      vec3 warm = vec3(1.0,  0.20, 0.75);  // hot magenta
+      vec3 hot  = vec3(1.0,  0.78, 0.30);  // gold
       vec3 c = mix(cold, warm, aSeed);
-      c = mix(c, hot, burst * 0.85);
+      c = mix(c, hot, burst * 0.9);
       vColor = c;
-      vGlow = 0.32 + burst * 0.5;
+      vGlow = 1.5 + burst * 0.9;
     }
   `,
   fragmentShader: /* glsl */`
@@ -259,8 +265,9 @@ const material = new THREE.ShaderMaterial({
       vec2 uv = gl_PointCoord - 0.5;
       float d = length(uv);
       if (d > 0.5) discard;
-      float alpha = smoothstep(0.5, 0.0, d);
-      alpha = pow(alpha, 2.2);
+      // bright solid core with a soft glowing falloff around it
+      float core = smoothstep(0.5, 0.0, d);
+      float alpha = pow(core, 1.7) + 0.35 * pow(core, 4.0);
       gl_FragColor = vec4(vColor * vGlow, alpha);
     }
   `,
@@ -276,9 +283,9 @@ const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
 const bloom = new UnrealBloomPass(
   new THREE.Vector2(innerWidth, innerHeight),
-  0.55,  // strength
-  0.45,  // radius
-  0.55   // threshold — only the bright cores bloom, so it never washes out
+  0.75,  // strength — a soft halo on each particle
+  0.5,   // radius
+  0.30   // threshold — low enough to glow, high enough to never wash out
 );
 composer.addPass(bloom);
 
