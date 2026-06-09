@@ -1,18 +1,23 @@
 # Systems-lab
 
-A personal learning laboratory for mastering **systems programming, data engineering, and modern backend development**.
+A personal learning laboratory for becoming a **TypeScript engineer who can build agent-native backends** — the profile early-to-mid-stage startups (YC and beyond) hire for remotely.
 
-This repo is my dedicated space to build strong, production-grade skills through hands-on projects — starting with TypeScript & Node.js, and eventually expanding into Go, Python, C++, and other languages.
+This repo is a single, deliberate path of 40 hands-on projects, all in **TypeScript + Node.js**, that ramps from backend fundamentals through the **context-engineering** and **AI-agent infrastructure** that today's startups are actually built on: tool-calling loops, memory and summarization, MCP servers, agent orchestration, durable execution, evals, and observability.
 
 ### Goals
 
-- Deepen my understanding of systems concepts (streaming, concurrency, I/O efficiency, pipelines, observability, etc.)
+- Build real backend systems instinct: streaming, concurrency, I/O efficiency, backpressure, observability.
+- Master context engineering: tokenization, token budgets, summarization, hierarchical memory, prompt caching.
+- Become fluent in the agent stack: tool-calling loops, MCP, orchestration, durable execution, sandboxing, and evals.
+- Ship agent-native capstones polished enough to be a remote-hire portfolio.
 
 ---
 
-## Final 30 TypeScript + Node.js Projects (60% Systems + 25% Web + 15% Database)
+## 40 TypeScript Projects — Backend Fundamentals → Context Engineering → Agent Infrastructure
 
-### Beginner
+Difficulty ramps **gradually** — every project is a small step up from the one before it, and the backend and AI tracks are interleaved so you're never stacking three hard new concepts at once. Later projects reuse earlier ones (the resilient HTTP client, the streaming LLM client, the context manager, the observability layer) rather than starting from scratch.
+
+### Tier 1 — Warm-up: TypeScript, Node & first LLM calls (1–6)
 
 - [x] 1. **CLI File Analyzer**  
      Build a robust CLI tool that analyzes any JSON or CSV file and outputs schema info, row count, null counts, type detection, and basic statistics.
@@ -20,254 +25,151 @@ This repo is my dedicated space to build strong, production-grade skills through
 - [x] 2. **Simple Hono API**  
      Create a basic REST API using Hono with a few GET routes serving static or mock data (with proper TypeScript and Zod validation).
 
-- [ ] 3. **Streaming File Processor**  
-     Process large CSV/JSON files using Node.js Streams for cleaning and transformation without loading the entire file into memory.
+- [ ] 3. **Raw Conversation Loop + Token Meter**  
+     Your first LLM contact: a CLI chatbot that manually maintains a `messages` array and sends the full history every turn — no framework, raw API calls. Log the growing payload and a running token count (`gpt-tokenizer`) so you *see* the core resource constraint you'll engineer around for the rest of this list.
 
-- [ ] 4. **File Chunker Utility**  
-     Build a CLI tool that splits large files into fixed-size or line-based chunks, processes them independently, and supports recombination.
+- [ ] 4. **Streaming File Processor**  
+     Process large CSV/JSON files using Node.js Streams for cleaning and transformation without loading the entire file into memory. Get comfortable with backpressure — the foundation for everything that streams later.
 
 - [ ] 5. **Local Key-Value Store**  
-     Implement a persistent flat-file based key-value store with get, set, delete, and a simple index.
+     Implement a persistent key-value store: an append-only log on disk plus an in-memory index, with get/set/delete and crash-safe reload. The mental model behind every embedded store.
 
-- [ ] 6. **Postgres CLI with Prisma**  
-     Build a CLI tool that stores and queries structured records (like employee data) in a Postgres database using Prisma. Practice schema definition, type-safe queries, and running migrations from the command line.
+- [ ] 6. **Persistent Multi-Session Chat**  
+     Extend the conversation loop to save and reload sessions from SQLite (`better-sqlite3`): session IDs, list/switch/rename/delete. Add a per-session system prompt and measure how it changes token usage. This is the literal foundation of how a chat product stores and organizes history.
 
-### Intermediate
+### Tier 2 — Core backend + basic context management (7–14)
 
-- [ ] 7. **S3 Large File Manager**  
-     Create a CLI and library for uploading and downloading large files to S3 with multipart uploads and progress tracking.
+- [ ] 7. **Postgres CLI with Prisma**  
+     Build a CLI that stores and queries structured records in Postgres using Prisma. Practice schema definition, type-safe queries, and running migrations from the command line.
 
-- [ ] 8. **Hono File Upload API**  
-     Build a Hono API that accepts single and multiple file uploads and stores them locally or on S3.
+- [ ] 8. **Typed REST API on Postgres**  
+     Turn Project 2 into a real service: Hono + Prisma + Zod CRUD API backed by Postgres, with pagination, filtering, sorting, and clean error handling. Push query logic into the database with proper indexing.
 
-- [ ] 9. **Concurrent Downloader**  
-     Download multiple large files in parallel using worker_threads with controlled concurrency and resume support.
+- [ ] 9. **Streaming LLM Client**  
+     Call a real streaming LLM API and accumulate chunks through a bounded buffer with backpressure and cancellation. Reuse your streams intuition from Project 4. Do it wrong first (unbounded buffer), watch the heap climb, then fix it — and document the before/after.
 
-- [ ] 10. **Streaming Log Analyzer**  
-      Process large log files using Streams, detect patterns, count errors/warnings, and generate summary reports.
+- [ ] 10. **Sliding Window Memory**  
+      The simplest context strategy: when the conversation exceeds N tokens, drop the oldest messages. Build it as a reusable class with a configurable window and watch what gets dropped in a long chat.
 
-- [ ] 11. **Basic Job Queue System**  
-      Implement a simple job orchestrator using BullMQ with retries, priorities, and logging.
+- [ ] 11. **Conversation Summarizer**  
+      Instead of dropping old messages, call the LLM to summarize them into a compact note and splice it back in. Compare answer quality against the sliding window from Project 10. This is what most production chat interfaces actually do.
 
-- [ ] 12. **Relational Schema & CSV Importer**  
-      Design a multi-table Postgres schema with foreign keys and relations using Prisma. Build a pipeline that reads CSV/JSON files and bulk-inserts them into the relational schema, handling migrations, upserts, and constraint violations.
+- [ ] 12. **Context Window / Token Budget Manager**  
+      A budget with slots — system prompt, history, user input, response — that auto-truncates or summarizes on overflow but always preserves the system prompt. Property-based tests prove the budget is never exceeded. This is what every coding agent does with its context.
 
-### Intermediate-Advanced
+- [ ] 13. **File Context Injector**  
+      "Add this file to the conversation": read it, estimate its token cost, inject it intelligently, and warn when it's too large. This is the core primitive behind how Claude Code knows about your files.
 
-- [ ] 13. **Parallel Data Processor**  
-      Build a system that processes large datasets using worker_threads with dynamic load balancing.
+- [ ] 14. **File Upload + Object Storage Service**  
+      A Hono API that accepts single and multipart file uploads, streams them to local disk or S3, and reports progress — without buffering whole files in memory.
 
-- [ ] 14. **Kafka Sensor Data Simulator**  
-      Create a producer that generates and streams fake time-series data to Kafka at configurable rates using kafkajs.
+### Tier 3 — Agent primitives + production backend (15–24)
 
-- [ ] 15. **Hono API with Pagination & Filtering**  
-      Build a Hono REST API that serves paginated, sorted, and time-range filtered data from files or S3.
+- [ ] 15. **Background Job Queue**  
+      A job system on BullMQ with retries, priorities, scheduled/delayed jobs, and a dead-letter queue. Build a small CLI to inspect, filter, and replay failed jobs.
 
-- [ ] 16. **Kafka Consumer with Windowed Aggregation**  
-      Consume data from Kafka, perform time-windowed aggregations, and store results efficiently.
+- [ ] 16. **Tool-Calling Agent Loop**  
+      Build the core agent loop by hand: model → tool calls → execute → feed results back, until done or a step limit is hit. Define tools with Zod schemas; handle errors mid-loop. No framework — this is the engine behind every coding agent and the single most important project on this list.
 
-- [ ] 17. **Efficient Binary Storage Layer**  
-      Implement time-series storage using zarrita.js (Zarr) with smart chunking and compression.
+- [ ] 17. **Context-Aware File Agent**  
+      An agent that reads, writes, and searches files in a directory — and decides which files are *relevant* to load into context instead of dumping everything (filename + keyword heuristics). This is the core problem Claude Code solves.
 
-- [ ] 18. **Database-Backed Query Service**  
-      Integrate Postgres into your Hono API using Prisma with connection pooling and transactions. Move pagination and filtering logic from the file layer to the database layer with proper indexing and query planning.
+- [ ] 18. **Auth Service (Sessions + JWT + Refresh)**  
+      argon2 password hashing, httpOnly session cookies, JWT access tokens, and refresh-token rotation with reuse detection. Write up the stateful-vs-stateless tradeoffs in the README.
 
-### Advanced
+- [ ] 19. **Rate Limiting, API Keys & Multi-Tenancy**  
+      Redis token-bucket rate limiting as Hono middleware, per-key quotas, and tenant isolation. The plumbing every B2B SaaS backend needs on day one.
 
-- [ ] 19. **Real-time Data Pipeline**  
-      Build an end-to-end pipeline: Sensor Simulator → Kafka → Consumer → Zarr Storage → Hono Query API.
+- [ ] 20. **Resilient HTTP Client Library**  
+      A reusable client with exponential backoff + jitter, configurable timeouts, and a circuit breaker. Retrofit it into your LLM client (Project 9) and reuse it for every outbound call from here on.
 
-- [ ] 20. **Hono Log Ingestion Service**  
-      Create a Hono API that accepts logs via HTTP POST, parses, enriches, and stores them efficiently.
+- [ ] 21. **Real-time Service (WebSockets)**  
+      Multi-room messaging with presence, typing indicators, reconnection with backfill, and correct message ordering. The substrate for live agent output and collaborative apps.
 
-- [ ] 21. **Observability Layer**  
-      Add structured logging, Prometheus metrics, and basic tracing across services.
+- [ ] 22. **Streaming Agent API (SSE)**  
+      Serve the agent loop over HTTP with Server-Sent Events: stream tokens and intermediate steps to the client, support mid-run cancellation, and apply backpressure when the client is slow.
 
-- [ ] 22. **Job Monitoring Dashboard**  
-      Build a simple Hono + HTMX dashboard to monitor job queues and pipeline health in real-time.
+- [ ] 23. **Session State Machine**  
+      Model a conversation as an explicit state machine (`collecting_info`, `processing`, `awaiting_confirmation`…), where the injected context and system prompt change per state. How production chatbots stay coherent over long sessions without losing the plot.
 
-- [ ] 23. **Rate Limiting & Authentication**  
-      Add rate limiting, JWT authentication, and API keys to your Hono APIs using middleware.
+- [ ] 24. **RAG Pipeline (+ vector conversation memory)**  
+      Chunk and embed documents into Postgres + pgvector, retrieve with citations, and measure retrieval quality. Then apply the same retrieval to conversation memory — recall only the most relevant past messages instead of replaying everything.
 
-- [ ] 24. **Time-Series Storage with Postgres**  
-      Add a Postgres time-series schema to the data pipeline with table partitioning by time range and BRIN indexes. Implement efficient bulk inserts from the Kafka consumer and benchmark time-range queries using EXPLAIN ANALYZE.
+### Tier 4 — Context-engineering depth + agent infrastructure (25–34)
 
-### Expert / Capstone
+- [ ] 25. **BPE Tokenizer (from scratch)**  
+      Implement byte-pair encoding from scratch: train merges on a corpus, encode/decode, and validate your counts against `gpt-tokenizer`. Demystifies context windows and cost — and it's a genuinely satisfying algorithmic build.
 
-- [ ] 25. **Full End-to-End Data Platform**  
-      Combine Kafka, worker threads, S3/Zarr storage, and Hono API into a complete mini data platform.
+- [ ] 26. **Eval Harness + Compression Benchmark**  
+      Force structured output (Zod-validated), build a small labeled golden set, and score agent outputs with exact-match and LLM-as-judge graders. Then benchmark your memory strategies (window / summarize / RAG / hierarchical) for information retention vs token cost. Eval design is a top hiring signal.
 
-- [ ] 26. **Advanced Hono API Features**  
-      Implement caching (Redis), OpenTelemetry tracing, and graceful shutdown in your main API.
+- [ ] 27. **Hierarchical Summarization**  
+      Three tiers of memory — recent (full fidelity), medium (summarized chunks), long-term (summaries of summaries) — each at a different token cost. This is how hours-long agent sessions stay coherent.
 
-- [ ] 27. **Production-grade File Processing Service**  
-      Build a robust service for large file upload, validation, processing, and status tracking via Hono API.
+- [ ] 28. **Prompt Caching Layer**  
+      Detect the repeated system-prompt prefix (it's always there) and stop recomputing it — via the model provider's native prompt caching or your own hash-based cache. Benchmark the latency and cost savings; cost-per-call is a real metric at every AI startup.
 
-- [ ] 28. **End-to-End Performance Optimization**  
-      Profile and optimize the entire platform (worker threads, chunk sizes, S3, Kafka, Hono routes) and document before/after results.
+- [ ] 29. **Observability Layer**  
+      Structured logging, Prometheus metrics, OpenTelemetry tracing, health checks, and graceful shutdown, wired across a service so you can actually see what's happening in production.
 
-- [ ] 29. **Deployable Production Platform**  
-      Dockerize the full system (multiple services + Redis + Kafka), add health checks, environment config, and deployment scripts.
+- [ ] 30. **MCP Server**  
+      Build a Model Context Protocol server that exposes tools, resources, and prompts, and connect to it from a client and from your agent loop (Project 16). This is YC's "software for agents" RFS made concrete — a machine-readable interface other agents can use.
 
-- [ ] 30. **Production Database Operations**  
-      Implement zero-downtime schema migrations, configure read replicas, and profile slow queries using pg_stat_statements. Tune connection pool settings across the full platform and document before/after query performance metrics.
+- [ ] 31. **Multi-Agent Orchestrator**  
+      Coordinate a planner and parallel worker agents (`Promise.all` + `p-limit` for concurrency), with shared state, result synthesis, and partial-failure handling. Decompose a task, fan out, and merge reliably.
 
----
+- [ ] 32. **Durable Agent Execution**  
+      Persist every step of an agent run so a crashed or restarted process resumes exactly where it left off — checkpointing plus a transactional outbox so no step is lost or duplicated. Prove it with a chaos test that kills the process mid-run.
 
-## Additional C++ Projects (High-Performance & Inference Track)
+- [ ] 33. **Agent Memory Store with Disk Spillover**  
+      A multi-session memory store with per-session budgets, safe under concurrent users. When a session goes idle or the store exceeds its budget, spill it to SQLite and free the heap; rehydrate transparently on next access. Benchmark the round-trip cost.
 
-### Intermediate
+- [ ] 34. **Sandboxed Code Execution Service**  
+      Run agent-generated code in an isolated worker/child process with CPU, memory, and wall-clock limits, killing runaway processes on timeout. The capability behind every "agent that writes and runs code" product.
 
-- [ ] **High-Performance Lock-Free Ring Buffer** **(C++)**  
-     Implement a fixed-size circular buffer with atomic operations, cache-line padding, and support for single/multi producer/consumer patterns. Benchmark throughput and compare with `std::deque` + mutex. (C++)
+### Tier 5 — Production agent platform + capstones (35–40)
 
-### Intermediate-Advanced
+- [ ] 35. **Agent Observability & Cost Tracing**  
+      Trace agent runs end to end: a span per tool call, token-and-dollar accounting per run, full request/response capture, and run replay, with a small dashboard. Builds on Project 29. You can't ship agents you can't see.
 
-- [ ] **Zero-Copy CSV/JSON Parser** **(C++)**  
-     Build a high-speed streaming parser using memory mapping (`mmap`), SIMD instructions where possible, and minimal allocations. Compare performance (speed & memory) with Node.js streams. (C++)
+- [ ] 36. **AI-Native Vertical Agent**  
+      Pick one real B2B workflow (support triage, ops automation, compliance review) and ship an agent that does the work end-to-end — not a chatbot, a system that completes the task. The YC "AI-native services" thesis in miniature.
 
-- [ ] **Custom Memory Allocator + Arena** **(C++)**  
-     Implement a fast arena allocator and a slab allocator. Use them in a small data structure and measure allocation/deallocation performance vs default `new`/`delete`. (C++)
+- [ ] 37. **Agentic SaaS Backend**  
+      Integrate the pieces into one coherent product backend: auth + multi-tenancy + jobs + orchestration + memory + evals + observability, with the agent loop at the center. Package the reusable parts as an installable SDK. (Stretch: per-tenant personalization where each agent evolves its own system prompt over time.) Your "hiring manager" demo.
 
-### Advanced
+- [ ] 38. **Minimal Claude Code Clone**  
+      A terminal coding agent, from scratch: reads/writes files, runs bash, maintains a coherent session, summarizes when the window fills, checkpoints state, and has a plan mode and a build mode. No frameworks — raw API calls. This touches nearly every concept on the list and is the most impressive single thing you can show.
 
-- [ ] **Lock-Free MPMC Queue** **(C++)**  
-     Build a multi-producer multi-consumer lock-free queue using atomics. Benchmark against moodycamel or `std::queue` with mutexes under high contention. (C++)
+- [ ] 39. **Deployable Production Platform**  
+      Dockerize the full stack (services + Postgres + Redis), add CI/CD, environment config, health checks, and a one-command deploy. Make it something a stranger can clone and run.
 
-- [ ] **SIMD-Accelerated Data Transformation** **(C++)**  
-     Implement vectorized operations (SSE/AVX) for filtering, parsing, or aggregation on large arrays of data. Compare performance with scalar version and measure cache efficiency. (C++)
-
-- [ ] **Persistent LSM-Tree Style Key-Value Store** **(C++)**  
-     Build a minimal LSM-tree based KV store (inspired by LevelDB/RocksDB). Focus on write-ahead log, SSTables, and basic compaction logic. (C++)
-
-### Expert / Capstone
-
-- [ ] **GPU-Aware Memory Manager + Basic CUDA Kernel** **(C++/CUDA)**  
-     Write a simple CUDA kernel (matrix multiplication or reduction) and integrate it with host C++ code. Manage pinned memory, CUDA streams, and measure kernel performance. (C++/CUDA)
-
-- [ ] **Custom Inference Serving Component** **(C++/CUDA)**  
-     Build a minimal continuous-batching + PagedAttention style KV cache manager (even with dummy tensors). Focus on memory layout, kernel fusion, and efficient token handling for inference. (C++/CUDA)
-
-- [ ] **Ultra Low-Latency Order Book / Market Data Handler** **(C++)**  
-     Parse FIX/ITCH market data feed with zero-copy techniques + lock-free structures. Target sub-microsecond critical path (HFT-style exercise). (C++)
+- [ ] 40. **End-to-End Performance & Cost Optimization**  
+      Profile and optimize the platform across latency, throughput, and token cost — caching, batching, prompt/context trimming, connection pooling. Document before/after numbers. Cost-per-task is a real business metric at every AI startup.
 
 ---
 
-## Supplementary Projects (Gap Coverage)
+### Engineering baselines (practices, not deliverables)
 
-These fill gaps in the main 30: testing, auth depth, queue semantics, real-time, distributed systems patterns, memory management, and a product-shaped capstone. Each item says *when* to build it relative to the main list — respect the prereqs so you're not learning three new concepts at once.
+Apply these across every repo — they're table stakes, and their absence is what fails take-home reviews:
 
-### Baselines (practices, not standalone deliverables)
-
-- **Testing baseline** — retrofit Vitest + Testcontainers to every repo starting from Project 7 onward. Unit tests for pure logic; integration tests that spin up real Postgres/Kafka/Redis containers. Don't mock what you can run.  
-     *Build after: Project 6. Retrofit to Projects 1–2 as warmup.*
-
-- **CI/CD baseline** — every repo gets ESLint + Prettier + Husky pre-commit + GitHub Actions running lint/typecheck/test on PRs. Table stakes, not a deliverable.  
-     *Build after: none — retrofit to existing repos (cli-file-analyzer, simple-hono-api) first as warmup, then apply to every new project from Project 3 onward.*
-
-### Auth Depth
-
-- [ ] A1. **Session + JWT + Refresh Token Auth Service** (Intermediate)  
-     Hono auth service with argon2 password hashing, httpOnly session cookies, JWT access tokens, and refresh token rotation with reuse detection. Write up session vs stateless auth tradeoffs in the README.  
-     *Build after: Project 6. Don't attempt before Postgres + Prisma comfort.*
-
-- [ ] A2. **OAuth2 / OIDC Client with Google & GitHub** (Intermediate-Advanced)  
-     Authorization code flow with PKCE against real providers using openid-client. Handle token refresh, revocation, and account linking.  
-     *Build after: A1. Don't attempt before A1 — you need the session vs JWT mental model first.*
-
-- [ ] A3. **RBAC + ABAC Authorization Service** (Advanced)  
-     Build a policy engine (roles, permissions, resource-level rules) and wire it as Hono middleware. Full test coverage for policy evaluation.  
-     *Build after: A1 and Project 12. Don't attempt without a multi-table relational schema to protect.*
-
-### Queue & Messaging Semantics
-
-- [ ] Q1. **Idempotent Kafka Consumer** (Intermediate-Advanced)  
-     Consume from Kafka with idempotency keys persisted in Postgres to handle at-least-once delivery without duplicate side effects. Benchmark dedup overhead.  
-     *Build after: Project 16. Don't attempt before Project 14 — you need Kafka producer/consumer fluency first.*
-
-- [ ] Q2. **Transactional Outbox Pattern** (Advanced)  
-     Write domain event + business row in a single Postgres transaction, relay to Kafka via a poller. Prove no lost events under crash with a chaos test.  
-     *Build after: Q1 and Project 18. Don't attempt before Q1.*
-
-- [ ] Q3. **Dead Letter Queue + Replay Tool** (Intermediate-Advanced)  
-     Add DLQ to a BullMQ/Kafka consumer with configurable retry policies. Build a CLI to inspect, filter, and replay dead messages.  
-     *Build after: Project 11 (for BullMQ flavor) or Project 16 (for Kafka flavor).*
-
-### Real-time / WebSockets
-
-- [ ] W1. **Real-time Chat with Hono + WebSockets** (Intermediate)  
-     Multi-room chat with typing indicators and presence. Handle reconnection, message ordering, and backfill on reconnect.  
-     *Build after: Project 8. Don't attempt before Hono middleware + file upload comfort.*
-
-- [ ] W2. **WebSocket Pub/Sub with Redis Fan-out** (Advanced)  
-     Scale WebSocket connections horizontally using Redis pub/sub across multiple Hono instances. Benchmark connection limits and fan-out latency.  
-     *Build after: W1 and Project 26. Don't attempt before W1 — you need single-instance WebSocket fluency first.*
-
-### Distributed Systems Patterns
-
-- [ ] D1. **Resilient HTTP Client Library** (Intermediate)  
-     Reusable HTTP client with exponential backoff + jitter, configurable timeouts, and a circuit breaker (opossum or hand-rolled). Use it for all outbound calls in later projects.  
-     *Build after: Project 7. Good to build before Project 14 so Kafka producers can use it for schema registry calls etc.*
-
-- [ ] D2. **Distributed Lock with Redis (Redlock)** (Advanced)  
-     Coordinate cron jobs or leader election across multiple instances. Document the correctness caveats honestly — Redlock is contested in the literature.  
-     *Build after: Project 26 and Project 29. Don't attempt before Project 26 — Redis fluency required, and you need a multi-instance scenario to justify it.*
-
-### Memory Management & Buffer Control
-
-The goal of this section is not just writing code that doesn't leak — it's developing an instinct for *where* leaks happen and *why*. In every project here, instrument your work: track `process.memoryUsage().heapUsed` before and after operations, take V8 heap snapshots and diff them, and deliberately cause the failure mode first before fixing it. Seeing the heap misbehave and then correcting it teaches more than the correct implementation alone.
-
-- [ ] M1. **Bounded Ring Buffer** (Beginner)  
-     Implement a fixed-size circular buffer from scratch — no libraries. When full, new writes overwrite the oldest entry. Track head/tail pointers manually and expose `read`, `write`, `isFull`, and `isEmpty` methods with full test coverage. The point is not the data structure itself but forcing you to reason about fixed memory slots and what "capacity" really means at a low level.  
-     *Build after: Project 3. Don't attempt before streams — you need the mental model of bounded data flow first.*
-
-- [ ] M2. **Streaming Token Accumulator** (Beginner-Intermediate)  
-     Hit a real streaming LLM API (Anthropic or OpenAI) and accumulate response chunks into a buffer. Track heap usage in real time using `process.memoryUsage()`. First, deliberately do it wrong — never evict, let the buffer grow unbounded, and observe the heap climb. Then fix it with a configurable size cap that drops oldest chunks when exceeded. Document the before/after heap graphs in the README.  
-     *Build after: M1 and Project 3. You need ring buffer intuition and stream familiarity before this.*
-
-- [ ] M3. **Backpressure-aware Transform Pipeline** (Intermediate)  
-     Build a fast producer (tight loop generating random data) piped into a slow consumer (artificial write delay simulating a TUI renderer or disk). Without backpressure, the buffer between them explodes. Implement correct `pause()`/`resume()` handling — or a proper Node.js Transform stream — so the producer slows to match the consumer. Measure peak memory with and without backpressure. This is the exact same problem as a fast LLM stream feeding a slow terminal renderer.  
-     *Build after: M2 and Project 10. Don't attempt before you're comfortable with Node.js Streams internals.*
-
-- [ ] M4. **Sliding Window Context Manager** (Intermediate)  
-     Build a class that holds a conversation history but enforces a strict token budget. When the budget is exceeded, it evicts the oldest messages first — but always preserves the system prompt. Expose methods for `add`, `evict`, `totalTokens`, and `snapshot`. Write property-based tests that prove the budget is never exceeded regardless of message sequence. This is the core of what every AI coding agent does with its context window.  
-     *Build after: M2. Don't attempt before you've dealt with unbounded accumulation in M2 — the eviction logic only makes sense once you've felt the problem.*
-
-- [ ] M5. **Unbounded Process Output Handler** (Intermediate)  
-     Spawn a child process that produces a large or infinite stream of output (`find /`, a log tail, or a synthetic generator). Read its stdout without buffering the whole thing — process line by line, apply a filter, and drop what you don't need. Then deliberately do it wrong first: buffer everything into an array and watch memory spike. The contrast is the lesson. Add a configurable max-lines cap that signals the child process to stop via `SIGTERM` when exceeded.  
-     *Build after: M3 and Project 9. You need child process and stream fluency before this.*
-
-- [ ] M6. **Session Memory Manager with Disk Spillover** (Intermediate-Advanced)  
-     Build a multi-session store where each session has a configurable memory budget. When a session goes idle (no activity for N seconds) or the total store exceeds its budget, serialize the session to disk (SQLite or flat JSON) and free the in-memory buffer. When accessed again, deserialize from disk transparently. Benchmark the serialize/deserialize round-trip latency and document the tradeoff between memory savings and access cost. This is almost exactly what opencode does with SQLite for session persistence.  
-     *Build after: M4, M5, and Project 5. Don't attempt before M4 — you need the context manager mental model first.*
-
-- [ ] M7. **Heap Snapshot Diff Tool** (Advanced)  
-     Build a CLI tool that takes two V8 heap snapshots (using the `v8` module or `--inspect` protocol) of a running process, diffs them, and reports which object types grew, by how much, and which allocation sites are responsible. Run it against a deliberately leaky version of M2 or M5 to confirm it catches the leak. This is a tooling project — the output is the diagnostic capability, not a feature. Real-world memory debugging almost always requires a tool like this.  
-     *Build after: M5 and Project 21 (Observability Layer). You need observability intuition before building observability tooling.*
-
-### Product-Shaped Capstone
-
-- [ ] P1. **Multi-user Team Task App** (Intermediate-Advanced)  
-     End-to-end product: auth (A1), RBAC (A3), real-time updates (W1), file attachments (S3), background jobs (BullMQ), full tests, simple HTMX or React frontend. Your "hiring manager" demo — one polished product, not plumbing.  
-     *Build after: A1, A3, W1, Project 7, Project 11. Budget 1–2 weeks, not a weekend — this is an integrative capstone.*
+- **Testing** — Vitest for unit tests, Testcontainers for integration tests that spin up real Postgres/Redis. Start from Project 7 onward; don't mock what you can run.
+- **CI/CD** — ESLint + Prettier + a pre-commit hook + GitHub Actions running lint/typecheck/test on every PR. Retrofit to the existing repos first, then apply to every new project.
 
 ---
-
-### Future Plans
-
-This repository will eventually include implementations in:
-
-- Go
-- Python
-- C++
-- And other languages as I progress
-
-The focus will remain on **practical systems thinking**, **performance**, and **real-world backend engineering**.
 
 ### Tech Stack (Current Phase)
 
-- TypeScript + Node.js
-- Hono and Express
+- **Language/runtime:** TypeScript (strict) + Node.js
+- **Web:** Hono
+- **Data:** Postgres + Prisma, Redis, pgvector, SQLite
+- **Queue:** BullMQ
+- **AI/agents:** Anthropic SDK / Vercel AI SDK, MCP, `gpt-tokenizer`
+- **Ops:** Docker, OpenTelemetry, Prometheus
+
+### Future Plans
+
+Later phases will revisit the performance-critical pieces (tokenizer, sandboxing, storage layer) in **Go** and **C++**, and expand into other languages. The focus stays on **practical systems thinking**, **performance**, and **real-world backend + agent engineering**.
 
 ---
 
