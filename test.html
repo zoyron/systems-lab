@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Morphing Particles — Sphere · Cube · Torus</title>
+<style>
+  :root { color-scheme: dark; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%; overflow: hidden;
+    background: radial-gradient(ellipse at center,
+      #0a1024 0%, #050818 45%, #01020a 80%, #000003 100%);
+  }
+  #app { position: fixed; inset: 0; }
+  .ui {
+    position: fixed; left: 0; right: 0; bottom: 28px;
+    text-align: center; pointer-events: none;
+    font-family: "SF Mono", ui-monospace, Menlo, monospace;
+    color: rgba(220, 230, 255, 0.55);
+    letter-spacing: 0.35em; text-transform: uppercase; font-size: 12px;
+  }
+  .ui .name {
+    font-size: 15px; letter-spacing: 0.5em; color: rgba(180, 210, 255, 0.95);
+    transition: opacity 0.5s ease;
+  }
+  .ui .hint { margin-top: 10px; font-size: 10px; letter-spacing: 0.3em; opacity: 0.5; }
+  .title {
+    position: fixed; top: 26px; left: 0; right: 0; text-align: center;
+    font-family: "SF Mono", ui-monospace, Menlo, monospace;
+    color: rgba(160, 190, 255, 0.35); font-size: 11px; letter-spacing: 0.4em;
+    text-transform: uppercase; pointer-events: none;
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div class="title">morph · field</div>
+<div class="ui">
+  <div class="name" id="shapeName">SPHERE</div>
+  <div class="hint">drag to orbit</div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+
+// ---------------------------------------------------------------------------
+// Config
+// ---------------------------------------------------------------------------
+const COUNT = 18000;             // particles per shape (all shapes share count)
+const HOLD = 1.7;                // seconds each shape is held formed
+const MORPH = 2.6;               // seconds of a morph transition
+const CYCLE = HOLD + MORPH;
+const SCATTER = 1.9;             // how far particles fly out at burst peak
+
+const SHAPES = [
+  { name: 'SPHERE', build: sampleSphere },
+  { name: 'CUBE',   build: sampleCube },
+  { name: 'TORUS',  build: sampleTorus },
+];
+
+// ---------------------------------------------------------------------------
+// Shape samplers — each returns a Float32Array(COUNT*3) of surface points
+// ---------------------------------------------------------------------------
+function sampleSphere() {
+  const a = new Float32Array(COUNT * 3);
+  const R = 1.3;
+  for (let i = 0; i < COUNT; i++) {
+    const u = Math.random(), v = Math.random();
+    const theta = 2 * Math.PI * u;
+    const phi = Math.acos(2 * v - 1);
+    const s = Math.sin(phi);
+    a[i*3]   = R * s * Math.cos(theta);
+    a[i*3+1] = R * Math.cos(phi);
+    a[i*3+2] = R * s * Math.sin(theta);
+  }
+  return a;
+}
+
+function sampleCube() {
+  const a = new Float32Array(COUNT * 3);
+  const H = 1.1; // half size
+  for (let i = 0; i < COUNT; i++) {
+    const face = (Math.random() * 6) | 0;
+    const p = Math.random() * 2 - 1;
+    const q = Math.random() * 2 - 1;
+    let x, y, z;
+    switch (face) {
+      case 0: x =  1; y = p; z = q; break;
+      case 1: x = -1; y = p; z = q; break;
+      case 2: x = p; y =  1; z = q; break;
+      case 3: x = p; y = -1; z = q; break;
+      case 4: x = p; y = q; z =  1; break;
+      default: x = p; y = q; z = -1; break;
+    }
+    a[i*3]   = x * H;
+    a[i*3+1] = y * H;
+    a[i*3+2] = z * H;
+  }
+  return a;
+}
+
+function sampleTorus() {
+  const a = new Float32Array(COUNT * 3);
+  const R = 0.9, r = 0.42;
+  for (let i = 0; i < COUNT; i++) {
+    // rejection sampling for even distribution over the torus surface
+    let u, theta;
+    while (true) {
+      u = Math.random() * 2 * Math.PI;
+      const w = Math.random() * (R + r);
+      if (w <= R + r * Math.cos(u)) { break; }
+    }
+    theta = Math.random() * 2 * Math.PI;
+    const cu = Math.cos(u), su = Math.sin(u);
+    a[i*3]   = (R + r * cu) * Math.cos(theta);
+    a[i*3+1] = r * su;
+    a[i*3+2] = (R + r * cu) * Math.sin(theta);
+  }
+  return a;
+}
+
+// ---------------------------------------------------------------------------
+// Scene
+// ---------------------------------------------------------------------------
+const app = document.getElementById('app');
+const scene = new THREE.Scene();
+scene.background = null; // let the CSS radial gradient show through
+
+const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 100);
+camera.position.set(0, 0, 4.6);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+renderer.setClearColor(0x000000, 0); // transparent — CSS gradient shows behind
+renderer.setSize(innerWidth, innerHeight);
+const pixelRatio = Math.min(devicePixelRatio, 1.5);
+renderer.setPixelRatio(pixelRatio);
+app.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.enablePan = false;
+controls.minDistance = 2.5;
+controls.maxDistance = 9;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.6;
+
+// ---------------------------------------------------------------------------
+// Geometry + attributes
+// ---------------------------------------------------------------------------
+const shapeData = SHAPES.map(s => s.build());
+
+const geometry = new THREE.BufferGeometry();
+const aPosA = new THREE.BufferAttribute(shapeData[0].slice(), 3);
+const aPosB = new THREE.BufferAttribute(shapeData[1].slice(), 3);
+
+const rand = new Float32Array(COUNT * 3);
+const seed = new Float32Array(COUNT);
+for (let i = 0; i < COUNT; i++) {
+  // random unit direction for the explosion scatter
+  let x = Math.random()*2-1, y = Math.random()*2-1, z = Math.random()*2-1;
+  const len = Math.hypot(x, y, z) || 1;
+  rand[i*3] = x/len; rand[i*3+1] = y/len; rand[i*3+2] = z/len;
+  seed[i] = Math.random();
+}
+
+geometry.setAttribute('position', aPosA); // placeholder; shader uses aPosA/aPosB
+geometry.setAttribute('aPosA', aPosA);
+geometry.setAttribute('aPosB', aPosB);
+geometry.setAttribute('aRand', new THREE.BufferAttribute(rand, 3));
+geometry.setAttribute('aSeed', new THREE.BufferAttribute(seed, 1));
+
+// ---------------------------------------------------------------------------
+// Shader material
+// ---------------------------------------------------------------------------
+const uniforms = {
+  uTime:       { value: 0 },
+  uMorph:      { value: 0 },
+  uSize:       { value: 13.0 },
+  uScatter:    { value: SCATTER },
+  uPixelRatio: { value: pixelRatio },
+};
+
+const material = new THREE.ShaderMaterial({
+  uniforms,
+  transparent: true,
+  depthWrite: false,
+  blending: THREE.AdditiveBlending,
+  vertexShader: /* glsl */`
+    uniform float uTime;
+    uniform float uMorph;
+    uniform float uSize;
+    uniform float uScatter;
+    uniform float uPixelRatio;
+
+    attribute vec3 aPosA;
+    attribute vec3 aPosB;
+    attribute vec3 aRand;
+    attribute float aSeed;
+
+    varying vec3 vColor;
+    varying float vGlow;
+
+    void main() {
+      float m = uMorph;
+
+      // base shape interpolation
+      vec3 pos = mix(aPosA, aPosB, m);
+
+      // explosion envelope — peaks at the midpoint of the morph
+      float burst = sin(m * 3.14159265);
+      burst = pow(burst, 0.65);
+
+      // fly outward along a per-particle random direction
+      vec3 dir = normalize(aRand + 1e-4);
+      pos += dir * burst * uScatter * (0.55 + 0.45 * aSeed);
+
+      // turbulent swirl so the cloud feels alive, not just radial
+      float t = uTime * 0.7 + aSeed * 6.2831853;
+      vec3 swirl = vec3(
+        sin(t + pos.y * 2.3),
+        cos(t + pos.x * 2.1),
+        sin(t * 1.27 + pos.z * 2.0)
+      );
+      pos += swirl * burst * 0.22;
+
+      vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+      gl_Position = projectionMatrix * mvPosition;
+
+      // perspective size attenuation — kept small so particles stay crisp,
+      // not screen-filling quads. hard clamp guards against blow-ups up close.
+      float size = uSize * (1.0 + burst * 0.6);
+      gl_PointSize = clamp(size * uPixelRatio / -mvPosition.z, 1.5, 20.0);
+
+      // color: cool when formed, igniting warm/hot during the burst.
+      // punchy, saturated endpoints so they pop against the dark background.
+      vec3 cold = vec3(0.25, 0.85, 1.0);   // bright cyan
+      vec3 warm = vec3(1.0,  0.20, 0.75);  // hot magenta
+      vec3 hot  = vec3(1.0,  0.78, 0.30);  // gold
+      vec3 c = mix(cold, warm, aSeed);
+      c = mix(c, hot, burst * 0.9);
+      vColor = c;
+      vGlow = 1.5 + burst * 0.9;
+    }
+  `,
+  fragmentShader: /* glsl */`
+    varying vec3 vColor;
+    varying float vGlow;
+
+    void main() {
+      vec2 uv = gl_PointCoord - 0.5;
+      float d = length(uv);
+      if (d > 0.5) discard;
+      // bright solid core with a soft glowing falloff around it
+      float core = smoothstep(0.5, 0.0, d);
+      float alpha = pow(core, 1.7) + 0.35 * pow(core, 4.0);
+      gl_FragColor = vec4(vColor * vGlow, alpha);
+    }
+  `,
+});
+
+const points = new THREE.Points(geometry, material);
+scene.add(points);
+
+// ---------------------------------------------------------------------------
+// Post-processing — bloom for the glow
+// ---------------------------------------------------------------------------
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(
+  new THREE.Vector2(innerWidth, innerHeight),
+  0.75,  // strength — a soft halo on each particle
+  0.5,   // radius
+  0.30   // threshold — low enough to glow, high enough to never wash out
+);
+composer.addPass(bloom);
+
+// ---------------------------------------------------------------------------
+// Morph scheduling
+// ---------------------------------------------------------------------------
+const nameEl = document.getElementById('shapeName');
+let shapeIndex = 0;
+let lastCycle = 0;
+
+function advance(targetIndex) {
+  const from = targetIndex % SHAPES.length;
+  const to = (targetIndex + 1) % SHAPES.length;
+  aPosA.copyArray(shapeData[from]);
+  aPosB.copyArray(shapeData[to]);
+  aPosA.needsUpdate = true;
+  aPosB.needsUpdate = true;
+  nameEl.textContent = SHAPES[from].name;
+}
+
+// easeInOutCubic for buttery transitions
+function ease(x) {
+  return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+}
+
+// ---------------------------------------------------------------------------
+// Loop
+// ---------------------------------------------------------------------------
+const clock = new THREE.Clock();
+
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = clock.getDelta();
+  const elapsed = clock.elapsedTime;
+
+  // which cycle are we in
+  const cycleNum = Math.floor(elapsed / CYCLE);
+  if (cycleNum !== lastCycle) {
+    lastCycle = cycleNum;
+    shapeIndex = cycleNum % SHAPES.length;
+    advance(cycleNum);
+  }
+
+  const p = elapsed % CYCLE;
+  let morph = 0;
+  if (p > HOLD) {
+    morph = ease((p - HOLD) / MORPH);
+  }
+
+  // dim the label name during the morph
+  nameEl.style.opacity = (p < HOLD ? 1 : 0.25).toString();
+
+  uniforms.uMorph.value = morph;
+  uniforms.uTime.value = elapsed;
+
+  // gentle living rotation on top of orbit auto-rotate
+  points.rotation.y += dt * 0.05;
+
+  controls.update();
+  composer.render();
+}
+
+advance(0);
+animate();
+
+// ---------------------------------------------------------------------------
+// Resize
+// ---------------------------------------------------------------------------
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+  composer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>
