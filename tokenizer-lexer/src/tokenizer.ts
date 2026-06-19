@@ -21,6 +21,7 @@ export enum TokenType {
   Semicolon = "Semicolon",
   Identifier = "Identifier",
   Function = "Function",
+  StringLiteral = "StringLiteral",
 }
 
 // up until this point we have only described the kinds of tokens, not what actual tokens will be. from now, we'll focus on defining what the actual token are.
@@ -44,7 +45,8 @@ export type Token =
   | { type: TokenType.Dot }
   | { type: TokenType.Semicolon }
   | { type: TokenType.Identifier; name: string }
-  | { type: TokenType.Function };
+  | { type: TokenType.Function }
+  | { type: TokenType.StringLiteral; value: string };
 
 // This is the TOKEN FACTORY
 export const token = {
@@ -78,6 +80,10 @@ export const token = {
 
   function(): Token {
     return { type: TokenType.Function };
+  },
+
+  stringLiteral(value: string): Token {
+    return { type: TokenType.StringLiteral, value: value };
   },
 };
 
@@ -146,6 +152,29 @@ export function tokenize(input: string): Token[] {
       continue; // cursor is already parked on the non-letter
     }
 
+    // A single quote means a string literal is starting
+    if (char === "'") {
+      current += 1;
+      let value: string = "";
+      while (current < input.length) {
+        const next: string | undefined = input[current];
+
+        if (next === undefined || next === "'") {
+          break;
+        }
+
+        value += next;
+        current += 1;
+      }
+      if (input[current] !== "'") {
+        throw new Error("Unterminated string, expected a closing '");
+      }
+
+      current += 1;
+      tokens.push(token.stringLiteral(value));
+      continue;
+    }
+
     switch (char) {
       case "(":
         tokens.push(token.leftParen());
@@ -181,7 +210,7 @@ export function tokenize(input: string): Token[] {
   return tokens;
 }
 
-console.log(tokenize("function hello()"));
+console.log(tokenize("function hello() { 'hello, world!'; }"));
 
 // Whitespace is not a token. In JavaScript, spaces and new lines only exist to separate other things; they carry no meaning of their own
 // So, the tokenizer's job with whitespace is simple: skip it entirely. Dont produce a token, just move past it.
