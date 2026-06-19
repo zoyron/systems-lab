@@ -58,12 +58,26 @@ export const token = {
 // tokenize function
 // takes the source string returns an array of tokens
 // Token[] retunrs type says explicitly "this hands back a list of token"
+
+// Returns true if the character is a whitespace (space, tab, newline, etc)
+// \s is a regex shorthand for "any one whitespace character".
+// .test(...) returns true/false for whether the string matches the pattern
+function isWhiteSpace(char: string): boolean {
+  return /\s/.test(char);
+}
+
 export function tokenize(input: string): Token[] {
   const tokens: Token[] = [];
   let current: number = 0;
 
   while (current < input.length) {
     const char: string | undefined = input[current];
+
+    // If this character is a whitespace, it is not a token - skip it.
+    if (char !== undefined && isWhiteSpace(char)) {
+      current += 1;
+      continue; // skip the test of THIS iteration, start the next one
+    }
 
     switch (char) {
       case "(":
@@ -94,10 +108,13 @@ export function tokenize(input: string): Token[] {
         throw new Error(`Unknown character: ${char}`);
     }
 
-    current = current + 1;
+    current += 1;
   }
 
   return tokens;
 }
 
-console.log(tokenize("{}()"));
+console.log(tokenize("( ) { }"));
+
+// Whitespace is not a token. In JavaScript, spaces and new lines only exist to separate other things; they carry no meaning of their own
+// So, the tokenizer's job with whitespace is simple: skip it entirely. Dont produce a token, just move past it.
