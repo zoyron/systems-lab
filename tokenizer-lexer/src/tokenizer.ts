@@ -22,3 +22,82 @@ export enum TokenType {
 }
 
 // up until this point we have only described the kinds of tokens, not what actual tokens will be. from now, we'll focus on defining what the actual token are.
+
+// now we are building the objects that we will be handing later on. and a clean way to build the said objects.
+// once we have this, the next step - the scanning loop - the part where our code is scanned constantly in a loop to check whether the things fit in the tokens we described or not. and it will also be consitant broken down into tokens using the method we define now.
+
+export type Token = {
+  type: TokenType;
+};
+
+export const token = {
+  leftParen(): Token {
+    return { type: TokenType.LeftParen };
+  },
+
+  rightParen(): Token {
+    return { type: TokenType.RightParen };
+  },
+
+  leftCurly(): Token {
+    return { type: TokenType.LeftCurly };
+  },
+
+  rightCurly(): Token {
+    return { type: TokenType.RightCurly };
+  },
+
+  dot(): Token {
+    return { type: TokenType.Dot };
+  },
+  semicolon(): Token {
+    return { type: TokenType.Semicolon };
+  },
+};
+
+// tokenize function
+// takes the source string returns an array of tokens
+// Token[] retunrs type says explicitly "this hands back a list of token"
+export function tokenize(input: string): Token[] {
+  const tokens: Token[] = [];
+  let current: number = 0;
+
+  while (current < input.length) {
+    const char: string | undefined = input[current];
+
+    switch (char) {
+      case "(":
+        tokens.push(token.leftParen());
+        break;
+
+      case ")":
+        tokens.push(token.rightParen());
+        break;
+
+      case "{":
+        tokens.push(token.leftCurly());
+        break;
+
+      case "}":
+        tokens.push(token.rightCurly());
+        break;
+
+      case ".":
+        tokens.push(token.dot());
+        break;
+
+      case ";":
+        tokens.push(token.semicolon());
+        break;
+
+      default:
+        throw new Error(`Unknown character: ${char}`);
+    }
+
+    current = current + 1;
+  }
+
+  return tokens;
+}
+
+console.log(tokenize("{}()"));
