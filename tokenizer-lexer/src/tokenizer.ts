@@ -20,6 +20,7 @@ export enum TokenType {
   Dot = "Dot",
   Semicolon = "Semicolon",
   Identifier = "Identifier",
+  Function = "Function",
 }
 
 // up until this point we have only described the kinds of tokens, not what actual tokens will be. from now, we'll focus on defining what the actual token are.
@@ -42,8 +43,10 @@ export type Token =
   | { type: TokenType.RightCurly }
   | { type: TokenType.Dot }
   | { type: TokenType.Semicolon }
-  | { type: TokenType.Identifier; name: string };
+  | { type: TokenType.Identifier; name: string }
+  | { type: TokenType.Function };
 
+// This is the TOKEN FACTORY
 export const token = {
   leftParen(): Token {
     return { type: TokenType.LeftParen };
@@ -72,7 +75,19 @@ export const token = {
   identifier(name: string): Token {
     return { type: TokenType.Identifier, name: name };
   },
+
+  function(): Token {
+    return { type: TokenType.Function };
+  },
 };
+
+/**
+ * Maps a reserved keyword to the builder that makes its token.
+ * Adding a new keyword layter is just one more entry here.
+ */
+const keywords: Map<string, () => Token> = new Map([
+  ["function", token.function],
+]);
 
 // tokenize function
 // takes the source string returns an array of tokens
@@ -118,7 +133,16 @@ export function tokenize(input: string): Token[] {
         current += 1;
       }
 
-      tokens.push(token.identifier(name)); // the finished word becomes one token
+      // The word is complete now. Look it up in the keywords map
+      // if .get(name) returns the stored builder if reserved, else undefined
+      const keywordBuilder: (() => Token) | undefined = keywords.get(name);
+      if (keywordBuilder !== undefined) {
+        // the word is there in the map, so it is a reserved word.
+        tokens.push(keywordBuilder());
+      } else {
+        tokens.push(token.identifier(name));
+      }
+
       continue; // cursor is already parked on the non-letter
     }
 
@@ -157,7 +181,7 @@ export function tokenize(input: string): Token[] {
   return tokens;
 }
 
-console.log(tokenize("hi()"));
+console.log(tokenize("function hello()"));
 
 // Whitespace is not a token. In JavaScript, spaces and new lines only exist to separate other things; they carry no meaning of their own
 // So, the tokenizer's job with whitespace is simple: skip it entirely. Dont produce a token, just move past it.
