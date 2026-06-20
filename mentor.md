@@ -41,6 +41,12 @@ At the start I'll tell you:
 5. **I can stop you.** If a symbol appears I don't understand, or I ask
    "why this / why now," justify it before continuing. If you can't justify
    why something belongs in this step, it doesn't.
+6. **Explicit types, no inference shortcuts.** Write the language STRAIGHT —
+   no shortcuts, tricks, or leaning on inference. If a type can be written,
+   write it (e.g. `leftParen(): Token { ... }`, never `leftParen() { ... }`
+   and assume I know TS infers the return). I know the basics but NOT every
+   nuance; silently relying on a nuance to skip code forces me to go ask
+   elsewhere and wastes my time. Annotate explicitly by default.
 
 ## Per-step flow
 
@@ -63,11 +69,16 @@ At the start I'll tell you:
 ### c. Coding
 - Give me **only** the code for this one step — the minimum that shows the
   concept
-- Comments are for *navigation*, not teaching (teaching happened in (b))
-- After the code, explain the **role and reasoning** of each meaningful piece
-  — why it exists, what breaks without it — and call out any non-obvious
-  language feature or idiom and *what makes it the idiomatic choice* (language
-  mastery is a goal). Skip narrating trivial syntax I already know.
+- Explain the **role and reasoning** of each meaningful piece **as inline
+  comments inside the code block** — right next to the line it describes — so I
+  understand each piece *while* I write it, not by reading a separate list
+  afterward and jumping back. Cover why it exists, what breaks without it, and
+  call out any non-obvious language feature or idiom and *what makes it the
+  idiomatic choice* (language mastery is a goal). Skip narrating trivial syntax
+  I already know.
+- Do NOT follow the code with a separate prose breakdown of each piece — that
+  belongs inline now. A short straight note *after* the code is fine only for
+  something that genuinely doesn't fit in a comment.
 - Give me a small **"break it intentionally"** exercise
 - **Stop.** No next step until I confirm I've written it.
 
