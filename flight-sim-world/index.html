@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#171d2a" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23171d2a'/%3E%3Cpath d='M10 35h44L39 27l4-3 17 11-17 11-4-3 15-8H10z' fill='%23d5ab63'/%3E%3C/svg%3E" />
+    <meta name="description" content="Windward, a small handmade flight atlas." />
+    <title>Windward — A Small Flight Atlas</title>
+  </head>
+  <body>
+    <main id="app" aria-label="Windward flight simulator">
+      <div id="scene" aria-hidden="true"></div>
+      <div class="sky-grain" aria-hidden="true"></div>
+      <section id="loading" class="loading" aria-live="polite">
+        <div class="loading__mark" aria-hidden="true"><span></span><span></span></div>
+        <p class="eyebrow">Preparing the evening wind</p>
+        <p id="loading-status" class="loading__status">Charting the coast…</p>
+      </section>
+      <div id="ui-root"></div>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
