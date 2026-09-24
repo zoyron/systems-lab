@@ -1,35 +1,35 @@
 import * as THREE from 'three';
 
 export const COLORS = {
-  void: 0x050505,
-  ground: 0x4b4a32,
-  groundDark: 0x353a29,
-  dirt: 0x67503a,
-  dirtLight: 0x846a48,
-  stone: 0x51585a,
-  stoneLight: 0x737977,
-  stoneDark: 0x303537,
-  wood: 0x55382a,
-  woodLight: 0x815a39,
-  woodDark: 0x2d211d,
-  burgundy: 0x672e3a,
-  red: 0x913f38,
-  leaf: 0x7d3540,
-  leafLight: 0xa34d45,
-  olive: 0x536044,
-  oliveLight: 0x697253,
-  crop: 0xb18b3f,
-  cropLight: 0xd0a24e,
-  orange: 0xd36b2b,
-  orangeLight: 0xf19a39,
-  bone: 0xd8d0b7,
-  boneLight: 0xf0e7cb,
-  ghost: 0xe9e8d9,
+  void: 0x07090a,
+  ground: 0x696849,
+  groundDark: 0x4b503a,
+  dirt: 0x8a6748,
+  dirtLight: 0xa78256,
+  stone: 0x6d7778,
+  stoneLight: 0x929b98,
+  stoneDark: 0x414a4d,
+  wood: 0x6e4a32,
+  woodLight: 0x946b43,
+  woodDark: 0x382b26,
+  burgundy: 0x823c4a,
+  red: 0xa64a43,
+  leaf: 0x963f4b,
+  leafLight: 0xb15b56,
+  olive: 0x627050,
+  oliveLight: 0x7b855c,
+  crop: 0xb68c45,
+  cropLight: 0xd4a857,
+  orange: 0xd66b2c,
+  orangeLight: 0xf2a146,
+  bone: 0xd8d1bb,
+  boneLight: 0xf3e9ce,
+  ghost: 0xf1f0df,
   black: 0x101112,
-  green: 0x48f28a,
-  greenDark: 0x123b2b,
-  purple: 0x6b446e,
-  apple: 0xa9382f,
+  green: 0x4ff08b,
+  greenDark: 0x17452e,
+  purple: 0x735274,
+  apple: 0xb84435,
 };
 
 export const UP = new THREE.Vector3(0, 1, 0);
@@ -50,11 +50,6 @@ export function clamp(value, min, max) {
 
 export function damp(current, target, lambda, dt) {
   return THREE.MathUtils.lerp(current, target, 1 - Math.exp(-lambda * dt));
-}
-
-export function easeInOut(value) {
-  const t = clamp(value, 0, 1);
-  return t * t * (3 - 2 * t);
 }
 
 export function standardMaterial(color, options = {}) {
@@ -110,13 +105,13 @@ export const materials = {
   orangeLight: standardMaterial(COLORS.orangeLight, { roughness: 0.72 }),
   bone: standardMaterial(COLORS.bone, { roughness: 0.92 }),
   boneLight: standardMaterial(COLORS.boneLight, { roughness: 0.88 }),
-  ghost: standardMaterial(COLORS.ghost, { roughness: 0.82, emissive: 0x4c5a55, emissiveIntensity: 0.16 }),
+  ghost: standardMaterial(COLORS.ghost, { roughness: 0.82, emissive: 0x789486, emissiveIntensity: 0.28 }),
   black: standardMaterial(COLORS.black, { roughness: 1 }),
   green: standardMaterial(COLORS.green, { roughness: 0.4, emissive: COLORS.green, emissiveIntensity: 3.2 }),
   greenDark: standardMaterial(COLORS.greenDark, { roughness: 0.7, emissive: 0x1b6a3f, emissiveIntensity: 0.7 }),
   purple: standardMaterial(COLORS.purple, { roughness: 0.9 }),
   apple: standardMaterial(COLORS.apple, { roughness: 0.62 }),
-  window: glowMaterial(0xf0a347, 0.5),
+  window: standardMaterial(0xe7a04c, { roughness: 0.54, emissive: 0xd66b2c, emissiveIntensity: 1.35 }),
   greenGlow: glowMaterial(COLORS.green, 0.62),
   orangeGlow: glowMaterial(COLORS.orangeLight, 0.75),
   fire: glowMaterial(COLORS.orangeLight, 0.92),
@@ -179,8 +174,10 @@ export function addCylinderBetween(parent, mat, a, b, radius) {
   const direction = end.clone().sub(start);
   const length = direction.length();
   const mesh = addCylinder(parent, mat, (a[0] + b[0]) * 0.5, (a[1] + b[1]) * 0.5, (a[2] + b[2]) * 0.5, radius, length);
-  direction.normalize();
-  mesh.quaternion.setFromUnitVectors(UP, direction);
+  if (length > 0.0001) {
+    direction.normalize();
+    mesh.quaternion.setFromUnitVectors(UP, direction);
+  }
   return mesh;
 }
 
@@ -242,6 +239,7 @@ export function setShadowFlags(root) {
 export function addPointLight(parent, color, intensity, distance, x, y, z) {
   const light = new THREE.PointLight(color, intensity, distance, 2);
   light.position.set(x, y, z);
+  light.decay = 2;
   parent.add(light);
   return light;
 }
@@ -286,7 +284,7 @@ export function buildStoneLantern(parent, x, z, scale = 1, warm = true) {
   addCone(group, materials.stoneDark, 0, 1.56, 0, 0.42, 0.35, 0, Math.PI, 0);
   const core = addGlowSphere(group, warm ? materials.orangeGlow : materials.greenGlow, 0, 0.83, 0, 0.22);
   core.userData.noShadow = true;
-  const light = warm ? addPointLight(group, 0xffa24d, 5.2, 7, 0, 0.9, 0) : addPointLight(group, COLORS.green, 4.5, 6, 0, 0.9, 0);
+  const light = warm ? addPointLight(group, 0xffa24d, 7.4, 10, 0, 0.92, 0) : addPointLight(group, COLORS.green, 5.4, 8, 0, 0.92, 0);
   light.userData.baseIntensity = light.intensity;
   light.userData.phase = random() * 6.28;
   lanternSystems.push(light);
@@ -348,6 +346,7 @@ export function buildTombstone(parent, x, z, options = {}) {
   geo.translate(0, 0, -0.11);
   const stone = new THREE.Mesh(geo, options.material || materials.stoneLight);
   group.add(stone);
+  addBox(group, materials.stoneDark, 0, 0.08, 0, width + 0.2, 0.16, 0.32);
   if (options.cross !== false) {
     addBox(group, materials.stoneDark, 0, height * 0.55, 0.125, 0.12, 0.5, 0.035);
     addBox(group, materials.stoneDark, 0, height * 0.58, 0.13, 0.38, 0.1, 0.035);
@@ -393,46 +392,56 @@ export function buildCrate(parent, x, y, z, scale = 1, produce = null) {
   return group;
 }
 
-export function buildLanternFruit(parent, x, y, z, scale = 1) {
+export function buildJackOLantern(parent, x, y, z, scale = 1) {
   const group = new THREE.Group();
   group.position.set(x, y, z);
   group.scale.setScalar(scale);
   parent.add(group);
-  addSphere(group, materials.orange, 0, 0.22, 0, 0.48, 0.43, 0.48);
-  addCylinder(group, materials.woodDark, 0, 0.69, 0, 0.08, 0.22);
-  addSphere(group, materials.black, -0.16, 0.3, 0.43, 0.08, 0.12, 0.035);
-  addSphere(group, materials.black, 0.16, 0.3, 0.43, 0.08, 0.12, 0.035);
-  addSphere(group, materials.black, 0, 0.1, 0.45, 0.18, 0.08, 0.035);
-  return group;
+  addSphere(group, materials.orange, 0, 0.32, 0, 0.48, 0.43, 0.48);
+  addCylinder(group, materials.woodDark, 0, 0.79, 0, 0.08, 0.22);
+  addSphere(group, materials.black, -0.16, 0.4, 0.43, 0.08, 0.12, 0.035);
+  addSphere(group, materials.black, 0.16, 0.4, 0.43, 0.08, 0.12, 0.035);
+  addBox(group, materials.black, 0, 0.17, 0.45, 0.18, 0.05, 0.035, 0, 0, 0.12);
+  addSphere(group, materials.black, -0.08, 0.21, 0.46, 0.055, 0.05, 0.025);
+  addSphere(group, materials.black, 0.08, 0.21, 0.46, 0.055, 0.05, 0.025);
+  const light = addPointLight(group, 0xff7d2e, 5.8, 8, 0, 0.44, 0.12);
+  light.userData.baseIntensity = light.intensity;
+  light.userData.phase = random() * 6.28;
+  lanternSystems.push(light);
+  return { group, light };
+}
+
+export function buildLanternFruit(parent, x, y, z, scale = 1) {
+  return buildJackOLantern(parent, x, y, z, scale).group;
 }
 
 export function buildFire(parent, x, z) {
   const group = new THREE.Group();
   group.position.set(x, 0, z);
   parent.add(group);
-  addTorus(group, materials.stoneDark, 0, 0.22, 0, 0.86, 0.16, Math.PI * 0.5);
+  addTorus(group, materials.stoneDark, 0, 0.22, 0, 0.94, 0.17, Math.PI * 0.5);
   for (let i = 0; i < 11; i += 1) {
     const angle = (i / 11) * Math.PI * 2;
-    addIco(group, i % 2 ? materials.stone : materials.stoneLight, Math.cos(angle) * 0.87, 0.27, Math.sin(angle) * 0.87, 0.25, 0.22, 0.25, 0, angle, 0);
+    addIco(group, i % 2 ? materials.stone : materials.stoneLight, Math.cos(angle) * 0.96, 0.27, Math.sin(angle) * 0.96, 0.27, 0.23, 0.27, 0, angle, 0);
   }
   addCylinderBetween(group, materials.woodDark, [-0.5, 0.35, -0.18], [0.48, 0.37, 0.18], 0.12);
   addCylinderBetween(group, materials.wood, [-0.46, 0.42, 0.22], [0.46, 0.4, -0.22], 0.11);
   const flameGroup = new THREE.Group();
   flameGroup.position.y = 0.35;
   group.add(flameGroup);
-  const flameBase = addCone(flameGroup, materials.fire, 0, 0.65, 0, 0.52, 1.45);
+  const flameBase = addCone(flameGroup, materials.fire, 0, 0.72, 0, 0.58, 1.58);
   flameBase.scale.z = 0.72;
-  const flameMid = addCone(flameGroup, materials.orangeGlow, -0.12, 0.46, 0.05, 0.34, 1.1, 0, 0, -0.08);
+  const flameMid = addCone(flameGroup, materials.orangeGlow, -0.12, 0.5, 0.05, 0.38, 1.2, 0, 0, -0.08);
   flameMid.scale.z = 0.66;
-  const flameCore = addCone(flameGroup, materials.fireCore, 0.04, 0.3, 0.02, 0.2, 0.76);
+  const flameCore = addCone(flameGroup, materials.fireCore, 0.04, 0.32, 0.02, 0.22, 0.82);
   flameCore.scale.z = 0.6;
-  const light = addPointLight(group, 0xff8c38, 14, 10, 0, 1.1, 0);
-  light.userData.baseIntensity = 14;
+  const light = addPointLight(group, 0xff8c38, 24, 16, 0, 1.2, 0);
+  light.userData.baseIntensity = 24;
   light.userData.phase = 0.7;
   const smoke = [];
   const smokeTexture = createSmokeTexture();
   for (let i = 0; i < 13; i += 1) {
-    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: smokeTexture, color: 0x24211f, transparent: true, opacity: 0.22, depthWrite: false }));
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: smokeTexture, color: 0x3b302b, transparent: true, opacity: 0.22, depthWrite: false }));
     sprite.position.set((random() - 0.5) * 0.5, 1.3 + random() * 4.6, (random() - 0.5) * 0.5);
     sprite.scale.setScalar(0.5 + random() * 0.55);
     sprite.userData.phase = random() * 5.2;
@@ -470,40 +479,47 @@ export function buildBench(parent, x, z) {
   addSphere(group, materials.black, 0.14, 1.47, 0.45, 0.07, 0.1, 0.025);
   addSphere(group, materials.black, 0, 1.28, 0.46, 0.17, 0.08, 0.025);
   addBox(group, materials.woodDark, 0, 0.92, -0.18, 0.08, 0.8, 0.08);
-  const light = addPointLight(group, 0xff9b39, 2.8, 4.8, 0, 1.45, 0.5);
-  light.userData.baseIntensity = 2.8;
+  const light = addPointLight(group, 0xff9b39, 3.8, 6, 0, 1.45, 0.5);
+  light.userData.baseIntensity = 3.8;
   light.userData.phase = 4.2;
   lanternSystems.push(light);
   return group;
 }
 
-export function buildChapel(parent) {
+export function buildChapel(parent, x = 8.2, z = -5.3, rotation = 0) {
   const group = new THREE.Group();
-  group.position.set(4.45, 0, -4.35);
+  group.position.set(x, 0, z);
+  group.rotation.y = rotation;
   parent.add(group);
-  addBox(group, materials.stoneDark, 0, 1.35, 0, 4.0, 2.7, 1.0);
-  addBox(group, materials.stone, -1.35, 1.55, 0.54, 1.2, 2.9, 0.16);
-  addBox(group, materials.stone, 1.35, 1.55, 0.54, 1.2, 2.9, 0.16);
-  addBox(group, materials.stoneLight, 0, 2.78, 0.1, 4.5, 0.2, 1.4);
+  addBox(group, materials.stoneDark, 0, 1.38, 0, 4.25, 2.76, 1.22);
+  addBox(group, materials.stone, -1.42, 1.55, 0.64, 1.25, 2.9, 0.15);
+  addBox(group, materials.stone, 1.42, 1.55, 0.64, 1.25, 2.9, 0.15);
+  addBox(group, materials.stoneLight, 0, 2.82, 0.08, 4.7, 0.2, 1.46);
   const roof = new THREE.Shape();
-  roof.moveTo(-2.45, 0);
-  roof.lineTo(0, 1.45);
-  roof.lineTo(2.45, 0);
+  roof.moveTo(-2.65, 0);
+  roof.lineTo(0, 1.5);
+  roof.lineTo(2.65, 0);
   roof.closePath();
-  const roofGeo = new THREE.ExtrudeGeometry(roof, { depth: 1.5, bevelEnabled: false });
-  roofGeo.translate(0, 0, -0.75);
+  const roofGeo = new THREE.ExtrudeGeometry(roof, { depth: 1.65, bevelEnabled: false });
+  roofGeo.translate(0, 0, -0.825);
   const roofMesh = new THREE.Mesh(roofGeo, materials.burgundy);
-  roofMesh.position.set(0, 3.0, 0);
+  roofMesh.position.set(0, 3.02, 0);
   group.add(roofMesh);
-  addBox(group, materials.window, 0, 1.85, 0.63, 0.7, 0.95, 0.05);
-  addBox(group, materials.woodDark, 0, 1.85, 0.68, 0.08, 0.98, 0.03);
-  addBox(group, materials.woodDark, 0, 1.85, 0.69, 0.72, 0.08, 0.03);
-  addBox(group, materials.woodDark, 0, 1.18, 0.62, 0.7, 1.8, 0.12);
-  addBox(group, materials.woodLight, 0, 1.2, 0.72, 0.08, 1.7, 0.04);
-  const light = addPointLight(group, 0xf0a347, 4.5, 7, 0, 2.0, 1.0);
-  light.userData.baseIntensity = 4.5;
+  addBox(group, materials.window, -1.15, 1.9, 0.71, 0.78, 0.92, 0.05);
+  addBox(group, materials.woodDark, -1.15, 1.9, 0.76, 0.08, 0.98, 0.03);
+  addBox(group, materials.woodDark, -1.15, 1.9, 0.77, 0.82, 0.08, 0.03);
+  addBox(group, materials.woodDark, 0, 1.17, 0.72, 1.02, 2.25, 0.12);
+  addBox(group, materials.woodLight, 0, 1.2, 0.81, 0.1, 2.05, 0.05);
+  addBox(group, materials.woodLight, 0.42, 1.18, 0.84, 0.09, 0.12, 0.07);
+  addBox(group, materials.stoneLight, 0, 0.14, 1.04, 2.45, 0.22, 0.78);
+  const light = addPointLight(group, 0xf0a347, 8.5, 12, 0, 2.0, 1.3);
+  light.userData.baseIntensity = 8.5;
   light.userData.phase = 3.1;
   lanternSystems.push(light);
-  for (let i = 0; i < 3; i += 1) addBox(group, materials.stoneLight, 0, 0.12 + i * 0.18, 1.2 + i * 0.33, 2.3, 0.18, 0.6);
-  return group;
+  const doorHit = new THREE.Mesh(geometry.box, materials.invisible);
+  doorHit.position.set(0, 1.2, 0.94);
+  doorHit.scale.set(1.28, 2.55, 0.22);
+  doorHit.userData.noShadow = true;
+  group.add(doorHit);
+  return { group, doorHit, light, roof: roofMesh };
 }

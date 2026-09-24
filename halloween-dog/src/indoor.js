@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import {
-  COLORS,
   addBox,
   addCone,
   addCylinder,
@@ -45,13 +44,14 @@ function buildPortal(parent) {
   addBox(group, materials.green, 0, 1.58, 0.4, 0.07, 2.25, 0.04);
   const halo = addSphere(group, materials.greenGlow, 0, 1.58, 0.12, 0.88, 1.25, 0.08);
   halo.userData.noShadow = true;
-  const light = addPointLight(group, 0x45ed87, 9, 8, 0, 1.5, 0.7);
-  light.userData.baseIntensity = 9;
+  const light = addPointLight(group, 0x45ed87, 12, 10, 0, 1.5, 0.7);
+  light.userData.baseIntensity = 12;
+  light.userData.phase = 1.8;
   const hit = new THREE.Mesh(geometry.box, materials.invisible);
-  hit.position.set(1.15, 1.5, -3.1);
+  hit.position.set(0, 1.5, 0.45);
   hit.scale.set(1.8, 2.5, 0.35);
   hit.userData.noShadow = true;
-  parent.add(hit);
+  group.add(hit);
   return { group, portal, halo, light, hit };
 }
 
@@ -67,8 +67,8 @@ function buildTorch(parent, x, y, z, rotation = 0) {
   flame.scale.z = 0.65;
   const core = addCone(group, materials.fireCore, 0, 0.29, 0.32, 0.08, 0.28);
   core.scale.z = 0.55;
-  const light = addPointLight(group, 0xff9a42, 6.5, 7.5, 0, 0.55, 0.42);
-  light.userData.baseIntensity = 6.5;
+  const light = addPointLight(group, 0xff9a42, 8.5, 9, 0, 0.55, 0.42);
+  light.userData.baseIntensity = 8.5;
   light.userData.phase = random() * 6.28;
   return { group, flame, core, light };
 }
@@ -158,24 +158,50 @@ function buildCoffin(parent) {
   return { group, skeleton, lid };
 }
 
+function buildExit(parent) {
+  const frame = new THREE.Group();
+  frame.position.set(0, 0, 3.55);
+  parent.add(frame);
+  addBox(frame, materials.stoneDark, -1.25, 1.55, 0, 1.7, 3.1, 0.3);
+  addBox(frame, materials.stoneDark, 1.25, 1.55, 0, 1.7, 3.1, 0.3);
+  addBox(frame, materials.stoneLight, -0.72, 1.55, 0.06, 0.18, 3.1, 0.44);
+  addBox(frame, materials.stoneLight, 0.72, 1.55, 0.06, 0.18, 3.1, 0.44);
+  addBox(frame, materials.stoneLight, 0, 3.1, 0.06, 1.62, 0.18, 0.44);
+  addBox(frame, materials.woodDark, 0, 0.12, 0.2, 1.22, 0.16, 0.18);
+  addBox(frame, materials.woodLight, -0.56, 1.55, 0.2, 0.08, 2.8, 0.12);
+  addBox(frame, materials.woodLight, 0.56, 1.55, 0.2, 0.08, 2.8, 0.12);
+  const hit = new THREE.Mesh(geometry.box, materials.invisible);
+  hit.position.set(0, 1.25, 0.34);
+  hit.scale.set(1.35, 2.55, 0.25);
+  hit.userData.noShadow = true;
+  frame.add(hit);
+  return { frame, hit };
+}
+
 export function buildCrypt(scene) {
   const group = new THREE.Group();
   group.name = 'Crypt';
   scene.add(group);
-  addBox(group, materials.stoneDark, 0, -0.22, 0, 9.0, 0.44, 7.2);
-  const tileMaterials = [standardMaterial(0x737671, { roughness: 0.96 }), standardMaterial(0x666a65, { roughness: 0.98 }), standardMaterial(0x7b7c73, { roughness: 0.94 })];
-  for (let x = -3.6; x <= 3.6; x += 0.9) {
-    for (let z = -3.0; z <= 3.0; z += 0.9) {
+  const bounds = { minX: -3.9, maxX: 3.9, minZ: -3.0, maxZ: 3.15 };
+  const obstacles = [];
+  const interiorLight = new THREE.HemisphereLight(0x9aa9b3, 0x3c2a20, 1.25);
+  group.add(interiorLight);
+  const interiorWarm = new THREE.AmbientLight(0x5c3426, 0.42);
+  group.add(interiorWarm);
+  addBox(group, materials.stoneDark, 0, -0.22, 0, 10.0, 0.44, 8.0);
+  const tileMaterials = [standardMaterial(0x777b75, { roughness: 0.96 }), standardMaterial(0x696f6a, { roughness: 0.98 }), standardMaterial(0x85877d, { roughness: 0.94 })];
+  for (let x = -4.05; x <= 4.05; x += 0.9) {
+    for (let z = -3.05; z <= 3.05; z += 0.9) {
       const tile = addBox(group, tileMaterials[Math.floor(random() * tileMaterials.length)], x, 0.035, z, 0.84, 0.07, 0.84);
       tile.rotation.y = (random() - 0.5) * 0.04;
     }
   }
-  buildWall(group, 0, -3.55, 8.6, 0.4, 3.7);
-  buildWall(group, -4.3, 0, 0.4, 6.8, 3.7);
-  buildWall(group, 4.3, 0, 0.4, 6.8, 3.7);
-  addBox(group, materials.stoneLight, 0, 3.72, -3.55, 9.0, 0.22, 0.6);
-  addBox(group, materials.stoneLight, -4.3, 3.72, 0, 0.6, 0.22, 7.0);
-  addBox(group, materials.stoneLight, 4.3, 3.72, 0, 0.6, 0.22, 7.0);
+  buildWall(group, 0, -3.6, 9.4, 0.4, 3.7);
+  buildWall(group, -4.5, 0, 0.4, 6.8, 3.7);
+  buildWall(group, 4.5, 0, 0.4, 6.8, 3.7);
+  addBox(group, materials.stoneLight, 0, 3.72, -3.6, 9.8, 0.22, 0.6);
+  addBox(group, materials.stoneLight, -4.5, 3.72, 0, 0.6, 0.22, 7.0);
+  addBox(group, materials.stoneLight, 4.5, 3.72, 0, 0.6, 0.22, 7.0);
   const portal = buildPortal(group);
   const torches = [
     buildTorch(group, -4.02, 1.85, -1.8, Math.PI * 0.5),
@@ -187,6 +213,9 @@ export function buildCrypt(scene) {
   const desk = buildDesk(group);
   const shelves = buildShelves(group);
   buildCrate(group, -2.15, 0, 2.2, 0.76, 'apples');
+  obstacles.push({ x: -3.1, z: 0.15, r: 1.1 });
+  obstacles.push({ x: -3.85, z: -1.85, r: 0.6 });
+  obstacles.push({ x: -2.15, z: 2.2, r: 0.55 });
   const chest = new THREE.Group();
   chest.position.set(-1.45, 0, -1.75);
   group.add(chest);
@@ -194,7 +223,9 @@ export function buildCrypt(scene) {
   addBox(chest, materials.woodLight, 0, 0.98, 0, 1.78, 0.12, 0.95);
   addBox(chest, materials.wood, 0, 0.52, 0.46, 1.36, 0.1, 0.06);
   addBox(chest, materials.cropLight, 0, 0.52, 0.5, 0.2, 0.26, 0.05);
+  obstacles.push({ x: -1.45, z: -1.75, r: 0.82 });
   const coffin = buildCoffin(group);
+  obstacles.push({ x: 2.55, z: 0.15, r: 1.48 });
   const lutin = createLutin();
   lutin.position.set(-2.35, 0, 0.25);
   group.add(lutin);
@@ -203,9 +234,16 @@ export function buildCrypt(scene) {
   lutinHit.scale.set(0.85, 1.4, 0.8);
   lutinHit.userData.noShadow = true;
   group.add(lutinHit);
-  const ground = addGroundPlane(group, 8.3, 6.4, 0.11);
+  obstacles.push({ x: -2.35, z: 0.25, r: 0.55 });
+  addSphere(group, materials.boneLight, 0.2, 0.26, 2.15, 0.2, 0.22, 0.2);
+  addSphere(group, materials.boneLight, 0.75, 0.24, 2.5, 0.17, 0.19, 0.17);
+  addSphere(group, materials.boneLight, -0.55, 0.24, 2.55, 0.16, 0.18, 0.16);
+  addSphere(group, materials.boneLight, 0.42, 0.24, 2.48, 0.08, 0.06, 0.04);
+  addSphere(group, materials.boneLight, 0.58, 0.24, 2.48, 0.08, 0.06, 0.04);
+  const exit = buildExit(group);
+  const ground = addGroundPlane(group, 8.9, 6.8, 0.11);
   const runeRing = addTorus(group, materials.greenDark, 1.15, 0.13, -1.8, 1.3, 0.025, Math.PI * 0.5);
   runeRing.userData.noShadow = true;
   setShadowFlags(group);
-  return { group, ground, portal, desk, shelves, chest, coffin, lutin, lutinHit, torches, obstacles: [{ x: 2.55, z: 0.15, r: 1.45 }, { x: -3.1, z: 0.15, r: 1.1 }, { x: -2.35, z: 0.25, r: 0.55 }] };
+  return { group, ground, bounds, obstacles, portal, desk, shelves, chest, coffin, lutin, lutinHit, torches, exit, interiorLight, interiorWarm };
 }

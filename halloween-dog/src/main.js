@@ -3,12 +3,10 @@ import './styles.css';
 import {
   COLORS,
   damp,
-  easeInOut,
   embers,
-  geometry,
   lanternSystems,
   leaves,
-  materials,
+  random,
 } from './kit.js';
 import { createGhost } from './actors.js';
 import { buildGraveyard } from './outdoor.js';
@@ -18,14 +16,15 @@ const canvas = document.getElementById('viewport');
 const uiRoot = document.getElementById('ui-root');
 const loading = document.getElementById('loading');
 const placeLabel = document.getElementById('place-label');
-const sequenceProgress = document.getElementById('sequence-progress');
-const sequenceLabel = document.getElementById('sequence-label');
+const chapterLabel = document.getElementById('chapter-label');
 const pauseButton = document.getElementById('pause-button');
 const pauseLabel = document.getElementById('pause-label');
 const replayButton = document.getElementById('replay-button');
 const toolsButton = document.getElementById('tools-button');
 const toolsPanel = document.getElementById('tools-panel');
 const toast = document.getElementById('toast');
+const interactionPrompt = document.getElementById('interaction-prompt');
+const interactionText = document.getElementById('interaction-text');
 const modal = document.getElementById('grave-modal');
 const modalClose = document.getElementById('modal-close');
 const keys = Object.create(null);
@@ -42,12 +41,10 @@ const cameraLook = new THREE.Vector3();
 const playerVelocity = new THREE.Vector3();
 const desiredVelocity = new THREE.Vector3();
 const movementInput = new THREE.Vector3();
-const autoPosition = new THREE.Vector3();
 const clickTarget = new THREE.Vector3();
 const nameWorld = new THREE.Vector3();
 const nameScreen = new THREE.Vector3();
 const tempA = new THREE.Vector3();
-const tempB = new THREE.Vector3();
 let renderer;
 let scene;
 let camera;
@@ -55,25 +52,22 @@ let graveyard;
 let crypt;
 let ghost;
 let collider;
-let phase = 0;
-let sequenceTime = 0;
+let location = 'graveyard';
 let visualTime = 0;
 let paused = false;
 let modalOpen = false;
-let freeExplore = false;
-let manualInput = false;
 let clickMoving = false;
+let pendingInteraction = null;
 let toastTimer = 0;
-let cameraHeight = 14.4;
-let desiredCameraHeight = 14.4;
+let cameraHeight = 20.5;
 let lastFrameTime = performance.now();
 let currentAspect = 1;
 
-function activeLocation() {
-  return phase === 1 ? crypt : graveyard;
+function activeData() {
+  return location === 'crypt' ? crypt : graveyard;
 }
 
-function addLabel(text, object, location, offsetY, radius, kind) {
+function addLabel(text, object, locationGroup, offsetY, radius, kind) {
   const element = document.createElement('div');
   element.className = 'nameplate';
   const mark = document.createElement('span');
@@ -82,11 +76,11 @@ function addLabel(text, object, location, offsetY, radius, kind) {
   label.textContent = text;
   element.append(mark, label);
   uiRoot.appendChild(element);
-  nameplates.push({ element, object, location, offsetY, radius, kind, opacity: 0 });
+  nameplates.push({ element, object, location: locationGroup, offsetY, radius, kind, opacity: 0 });
 }
 
-function addHit(location, hit, type, label, radius, action) {
-  const item = { location, hit, type, label, radius, action };
+function addHit(locationGroup, hit, type, label, radius, action, prompt) {
+  const item = { location: locationGroup, hit, type, label, radius, action, prompt };
   interactables.push(item);
   return item;
 }
@@ -94,36 +88,46 @@ function addHit(location, hit, type, label, radius, action) {
 function setupWorld() {
   scene = new THREE.Scene();
   scene.background = new THREE.Color(COLORS.void);
-  const ambient = new THREE.HemisphereLight(0x6e7a8d, 0x20140e, 0.68);
-  scene.add(ambient);
-  const moon = new THREE.DirectionalLight(0x8191b3, 1.3);
-  moon.position.set(-7, 14, 8);
+  scene.fog = new THREE.Fog(0x171b1e, 36, 64);
+  const skyFill = new THREE.HemisphereLight(0xa7bdd1, 0x4b3025, 1.45);
+  scene.add(skyFill);
+  const moon = new THREE.DirectionalLight(0xb6c8e1, 2.25);
+  moon.position.set(-12, 24, 11);
   moon.castShadow = true;
-  moon.shadow.mapSize.set(1536, 1536);
-  moon.shadow.camera.left = -11;
-  moon.shadow.camera.right = 11;
-  moon.shadow.camera.top = 11;
-  moon.shadow.camera.bottom = -11;
+  moon.shadow.mapSize.set(2048, 2048);
+  moon.shadow.camera.left = -18;
+  moon.shadow.camera.right = 18;
+  moon.shadow.camera.top = 18;
+  moon.shadow.camera.bottom = -18;
   moon.shadow.camera.near = 1;
-  moon.shadow.camera.far = 35;
-  moon.shadow.bias = -0.0005;
+  moon.shadow.camera.far = 62;
+  moon.shadow.bias = -0.00035;
+  moon.target.position.set(0, 0, 0);
   scene.add(moon);
-  scene.add(new THREE.AmbientLight(0x3c2419, 0.32));
+  scene.add(moon.target);
+  const coolFill = new THREE.DirectionalLight(0x7288aa, 0.38);
+  coolFill.position.set(12, 9, -14);
+  coolFill.target.position.set(0, 0, 0);
+  scene.add(coolFill);
+  scene.add(new THREE.AmbientLight(0x563526, 0.62));
   graveyard = buildGraveyard(scene);
   crypt = buildCrypt(scene);
-  const graveHit = addHit(graveyard.group, graveyard.graveHit, 'grave', "Zozo's grave", 2.35, openGraveModal);
-  addLabel("Zozo's grave", graveHit.hit, graveyard.group, 1.9, 2.35, 'grave');
-  addLabel('Zozo', graveyard.dog, graveyard.group, 1.28, 2.2, 'dog');
-  const dogHit = new THREE.Mesh(geometry.box, materials.invisible);
-  dogHit.position.set(0.2, 0.5, 0.95);
-  dogHit.scale.set(0.95, 0.95, 1.45);
-  dogHit.userData.noShadow = true;
-  graveyard.group.add(dogHit);
-  addHit(graveyard.group, dogHit, 'dog', 'Zozo', 1.8, () => showToast('Zozo is off in a cloud of white paws.'));
-  addLabel('Lutin', crypt.lutin, crypt.group, 1.55, 3.2, 'lutin');
-  addHit(crypt.group, crypt.lutinHit, 'lutin', 'Lutin', 2.8, () => showToast('Lutin keeps a small orange light beneath the desk.'));
-  addLabel('Green portal', crypt.portal.group, crypt.group, 3.35, 3.1, 'portal');
-  addHit(crypt.group, crypt.portal.hit, 'portal', 'Green portal', 3.1, () => showToast('The green light hums like a held breath.'));
+  addHit(graveyard.group, graveyard.graveHit, 'grave', "Zozo's grave", 2.5, openGraveModal, "READ ZOZO'S GRAVE");
+  addLabel("Zozo's grave", graveyard.grave, graveyard.group, 2.0, 2.5, 'grave');
+  addHit(graveyard.group, graveyard.dogHit, 'dog', 'Zozo', 1.9, petZozo, 'PET ZOZO');
+  addLabel('Zozo', graveyard.dog, graveyard.group, 1.34, 2.0, 'dog');
+  addHit(graveyard.group, graveyard.skeletonHit, 'skeleton', 'The fireside skeleton', 1.65, inspectSkeleton, 'INSPECT THE SKELETON');
+  addLabel('The fireside skeleton', graveyard.skeleton, graveyard.group, 2.4, 1.7, 'skeleton');
+  addHit(graveyard.group, graveyard.fireHit, 'fire', 'The little fire', 2.2, inspectFire, 'INSPECT THE FIRE');
+  addLabel('The little fire', graveyard.fire.group, graveyard.group, 2.15, 2.2, 'fire');
+  addHit(graveyard.group, graveyard.house.doorHit, 'door', 'The house', 2.45, enterCrypt, 'ENTER THE HOUSE');
+  addLabel('The house', graveyard.house.doorHit, graveyard.group, 2.7, 2.45, 'door');
+  addHit(crypt.group, crypt.lutinHit, 'lutin', 'Lutin', 2.8, inspectLutin, 'GREET LUTIN');
+  addLabel('Lutin', crypt.lutin, crypt.group, 1.7, 2.8, 'lutin');
+  addHit(crypt.group, crypt.portal.hit, 'portal', 'Green portal', 3.1, inspectPortal, 'TOUCH THE GREEN PORTAL');
+  addLabel('Green portal', crypt.portal.group, crypt.group, 3.4, 3.1, 'portal');
+  addHit(crypt.group, crypt.exit.hit, 'exit', 'Graveyard door', 2.2, leaveCrypt, 'LEAVE THE CRYPT');
+  addLabel('Graveyard door', crypt.exit.frame, crypt.group, 3.3, 2.2, 'exit');
   ghost = createGhost();
   scene.add(ghost.root);
   collider = ghost.collider;
@@ -137,101 +141,70 @@ function createRenderer() {
   renderer.setSize(window.innerWidth, window.innerHeight, false);
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.18;
+  renderer.toneMappingExposure = 1.28;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.setClearColor(COLORS.void, 1);
 }
 
 function cameraOffset() {
-  if (phase === 1) return tempA.set(10.5, 16, 13);
-  return tempA.set(14, 20, 16);
+  if (location === 'crypt') return tempA.set(9.5, 21, 13);
+  return tempA.set(9.5, 25, 13);
+}
+
+function desiredCameraHeight() {
+  return location === 'crypt' ? 13.2 : 20.5;
 }
 
 function updateFrustum() {
   const width = Math.max(1, renderer.domElement.clientWidth || window.innerWidth || 1);
   const height = Math.max(1, renderer.domElement.clientHeight || window.innerHeight || 1);
   currentAspect = width / height;
-  const baseWidth = phase === 1 ? 11.2 : 16.8;
-  const minimumHeight = phase === 1 ? 9.4 : 13.2;
-  const portraitHeight = baseWidth / Math.max(0.45, currentAspect);
-  const finalHeight = Math.max(minimumHeight, portraitHeight, cameraHeight);
-  camera.left = -finalHeight * currentAspect * 0.5;
-  camera.right = finalHeight * currentAspect * 0.5;
-  camera.top = finalHeight * 0.5;
-  camera.bottom = -finalHeight * 0.5;
+  const baseHeight = location === 'crypt' ? 11.8 : 20.5;
+  const baseWidth = location === 'crypt' ? 16.5 : 30;
+  const portraitHeight = Math.min(baseWidth / Math.max(0.45, currentAspect), 24);
+  const viewHeight = Math.max(baseHeight, portraitHeight, cameraHeight);
+  camera.left = -viewHeight * currentAspect * 0.5;
+  camera.right = viewHeight * currentAspect * 0.5;
+  camera.top = viewHeight * 0.5;
+  camera.bottom = -viewHeight * 0.5;
   camera.updateProjectionMatrix();
 }
 
-function cutCamera() {
-  const targetY = phase === 1 ? 0.85 : 0.62;
-  cameraTarget.set(phase === 1 ? 0.15 : ghost.root.position.x - 0.12, targetY, phase === 1 ? -0.05 : ghost.root.position.z - 0.2);
-  camera.position.copy(cameraTarget).add(cameraOffset());
-  camera.lookAt(cameraTarget);
-  cameraHeight = desiredCameraHeight;
-  updateFrustum();
-}
-
-function setLocation(nextPhase, free = false) {
-  phase = nextPhase;
-  freeExplore = free;
-  graveyard.group.visible = phase !== 1;
-  crypt.group.visible = phase === 1;
-  placeLabel.textContent = phase === 1 ? 'Crypt' : 'Graveyard';
-  sequenceLabel.textContent = phase === 1 ? 'A room between breaths' : phase === 2 ? 'The little dog returns' : 'A fireside introduction';
+function setLocation(nextLocation, snap = false) {
+  const previousLocation = location;
+  location = nextLocation === 1 || nextLocation === 'crypt' ? 'crypt' : 'graveyard';
+  graveyard.group.visible = location === 'graveyard';
+  crypt.group.visible = location === 'crypt';
+  placeLabel.textContent = location === 'crypt' ? 'CRYPT' : 'GRAVEYARD';
+  chapterLabel.textContent = 'A FIRESIDE INTRODUCTION';
   clickMoving = false;
-  manualInput = false;
-  if (phase === 0) {
-    ghost.root.position.set(0, 0, 3.35);
-    desiredCameraHeight = 14.4;
-  } else if (phase === 1) {
-    ghost.root.position.set(0, 0, 0.2);
+  pendingInteraction = null;
+  desiredVelocity.set(0, 0, 0);
+  playerVelocity.set(0, 0, 0);
+  if (location === 'crypt') {
+    ghost.root.position.set(0, 0, 2.25);
+    ghost.root.rotation.y = Math.PI;
+  } else if (previousLocation === 'crypt') {
+    ghost.root.position.set(8.2, 0, -2.82);
     ghost.root.rotation.y = 0;
-    desiredCameraHeight = 10.5;
   } else {
-    ghost.root.position.set(3.25, 0, 2.85);
+    ghost.root.position.set(0, 0, 4.9);
     ghost.root.rotation.y = 0;
-    desiredCameraHeight = 16.4;
   }
-  cutCamera();
-  updateSequenceUI();
-}
-
-function updateSequenceUI() {
-  const progress = freeExplore ? 1 : Math.max(0, Math.min(1, sequenceTime / 14.5));
-  sequenceProgress.style.width = `${(progress * 100).toFixed(2)}%`;
-  if (!freeExplore) {
-    if (sequenceTime < 6.8) sequenceLabel.textContent = 'A fireside introduction';
-    else if (sequenceTime < 12.1) sequenceLabel.textContent = 'A room between breaths';
-    else sequenceLabel.textContent = 'The little dog returns';
-  } else {
-    sequenceLabel.textContent = phase === 1 ? 'A room between breaths' : 'A fireside introduction';
+  if (snap) {
+    cameraHeight = desiredCameraHeight();
+    cameraTarget.copy(location === 'crypt' ? tempA.set(0, 0.9, 0) : tempA.set(ghost.root.position.x, 0.5, ghost.root.position.z));
+    camera.position.copy(cameraTarget).add(cameraOffset());
+    camera.lookAt(cameraTarget);
+    updateFrustum();
   }
-}
-
-function updateSequence(dt) {
-  if (freeExplore || modalOpen || paused) return;
-  sequenceTime += dt;
-  if (sequenceTime >= 6.8 && phase === 0) {
-    setLocation(1, false);
-    showToast('A green door waits in the dark.');
-  }
-  if (sequenceTime >= 12.1 && phase === 1) {
-    setLocation(2, false);
-    showToast('Back outside. Zozo has found the lawn.');
-  }
-  if (sequenceTime >= 14.5 && !freeExplore) {
-    freeExplore = true;
-    manualInput = true;
-    showToast('The little fire keeps burning.');
-  }
-  updateSequenceUI();
 }
 
 function showToast(message) {
   toast.textContent = message;
   toast.classList.add('is-visible');
-  toastTimer = 2.7;
+  toastTimer = 3.1;
 }
 
 function updateToast(dt) {
@@ -241,9 +214,10 @@ function updateToast(dt) {
 }
 
 function openGraveModal() {
-  if (modalOpen) return;
+  if (modalOpen || location !== 'graveyard') return;
   modalOpen = true;
   modal.hidden = false;
+  interactionPrompt.hidden = true;
   modalClose.focus();
 }
 
@@ -252,6 +226,42 @@ function closeGraveModal() {
   modalOpen = false;
   modal.hidden = true;
   canvas.focus();
+}
+
+function petZozo() {
+  showToast('Zozo leans into your hand. The gas is affectionate.');
+}
+
+function inspectSkeleton() {
+  showToast('The skeleton says hello. The fire says nothing, but it is listening.');
+}
+
+function inspectFire() {
+  showToast('A warm pocket of light, with room for one more ghost.');
+}
+
+function enterCrypt() {
+  if (location !== 'graveyard') return;
+  closeGraveModal();
+  closeTools();
+  setLocation('crypt');
+  showToast('The house opens into a quiet stone room.');
+}
+
+function leaveCrypt() {
+  if (location !== 'crypt') return;
+  closeGraveModal();
+  closeTools();
+  setLocation('graveyard');
+  showToast('Back beneath the moon. The little fire is still burning.');
+}
+
+function inspectLutin() {
+  showToast('Lutin keeps a small orange light beneath the desk.');
+}
+
+function inspectPortal() {
+  showToast('The green light hums like a held breath.');
 }
 
 function setPaused(value) {
@@ -264,109 +274,110 @@ function closeTools() {
   toolsButton.setAttribute('aria-expanded', 'false');
 }
 
-function replayIntro() {
+function resetPosition() {
   closeGraveModal();
   closeTools();
-  sequenceTime = 0;
-  visualTime = 0;
-  paused = false;
   setPaused(false);
-  freeExplore = false;
-  setLocation(0, false);
-  showToast('The fire is already waiting.');
+  if (location === 'crypt') ghost.root.position.set(0, 0, 2.25);
+  else ghost.root.position.set(0, 0, 4.9);
+  clickMoving = false;
+  pendingInteraction = null;
+  playerVelocity.set(0, 0, 0);
+  desiredVelocity.set(0, 0, 0);
+  showToast('A small reset. The park keeps its shape.');
 }
 
 function enterFreePlace(place) {
-  closeGraveModal();
-  closeTools();
-  sequenceTime = 14.5;
-  freeExplore = true;
-  if (place === 'crypt') setLocation(1, true);
+  if (place === 'crypt') enterCrypt();
   else {
-    setLocation(2, true);
-    ghost.root.position.set(1.3, 0, 2.3);
+    closeGraveModal();
+    closeTools();
+    if (location !== 'graveyard') setLocation('graveyard');
+    ghost.root.position.set(0, 0, 4.9);
+    showToast('The graveyard is yours to wander.');
   }
-  manualInput = true;
-  showToast(place === 'crypt' ? 'The green doorway is still humming.' : 'The graveyard is yours to wander.');
 }
 
 function updateCamera(dt) {
-  if (phase === 1) desiredCameraTarget.set(0.15, 0.9, -0.05);
-  else desiredCameraTarget.set(ghost.root.position.x + (phase === 2 ? 0.35 : -0.12), 0.62, ghost.root.position.z + (phase === 2 ? 0.1 : -0.2));
-  const followRate = phase === 1 ? 1.65 : 1.9;
-  cameraTarget.lerp(desiredCameraTarget, 1 - Math.exp(-followRate * dt));
+  if (location === 'crypt') desiredCameraTarget.set(0, 0.85, -0.05);
+  else desiredCameraTarget.set(ghost.root.position.x, 0.52, ghost.root.position.z - 0.05);
+  cameraTarget.lerp(desiredCameraTarget, 1 - Math.exp(-3.1 * dt));
   cameraScratch.copy(cameraTarget).add(cameraOffset());
-  camera.position.lerp(cameraScratch, 1 - Math.exp(-2.4 * dt));
+  camera.position.lerp(cameraScratch, 1 - Math.exp(-3.2 * dt));
   cameraLook.copy(cameraTarget);
   camera.lookAt(cameraLook);
-  if (Math.abs(cameraHeight - desiredCameraHeight) > 0.01) {
-    cameraHeight = damp(cameraHeight, desiredCameraHeight, 2.8, dt);
+  const nextHeight = desiredCameraHeight();
+  if (Math.abs(cameraHeight - nextHeight) > 0.01) {
+    cameraHeight = damp(cameraHeight, nextHeight, 2.8, dt);
     updateFrustum();
   }
 }
 
 function resolvePlayerCollision() {
-  const location = activeLocation();
+  const data = activeData();
   const radius = 0.56;
-  for (const obstacle of location.obstacles) {
+  for (const obstacle of data.obstacles) {
     const dx = ghost.root.position.x - obstacle.x;
     const dz = ghost.root.position.z - obstacle.z;
     const distance = Math.hypot(dx, dz);
     const minDistance = radius + obstacle.r;
-    if (distance < minDistance && distance > 0.0001) {
-      const push = (minDistance - distance) / distance;
-      ghost.root.position.x += dx * push;
-      ghost.root.position.z += dz * push;
+    if (distance < minDistance) {
+      if (distance < 0.0001) {
+        ghost.root.position.x += minDistance;
+      } else {
+        const push = (minDistance - distance) / distance;
+        ghost.root.position.x += dx * push;
+        ghost.root.position.z += dz * push;
+      }
     }
   }
-  if (phase === 1) {
-    ghost.root.position.x = Math.max(-3.65, Math.min(3.65, ghost.root.position.x));
-    ghost.root.position.z = Math.max(-2.8, Math.min(2.75, ghost.root.position.z));
-  } else {
-    ghost.root.position.x = Math.max(-6.65, Math.min(6.7, ghost.root.position.x));
-    ghost.root.position.z = Math.max(-5.0, Math.min(4.75, ghost.root.position.z));
+  ghost.root.position.x = Math.max(data.bounds.minX, Math.min(data.bounds.maxX, ghost.root.position.x));
+  ghost.root.position.z = Math.max(data.bounds.minZ, Math.min(data.bounds.maxZ, ghost.root.position.z));
+}
+
+function finishPendingInteraction() {
+  if (!pendingInteraction) return;
+  const item = pendingInteraction;
+  item.hit.getWorldPosition(tempA);
+  if (Math.hypot(tempA.x - ghost.root.position.x, tempA.z - ghost.root.position.z) <= item.radius + 0.42) {
+    pendingInteraction = null;
+    clickMoving = false;
+    interactWith(item);
   }
 }
 
 function updatePlayer(dt) {
+  if (modalOpen) return;
   const inputX = (keys.d ? 1 : 0) - (keys.a ? 1 : 0);
   const inputZ = (keys.s ? 1 : 0) - (keys.w ? 1 : 0);
   movementInput.set(inputX, 0, inputZ);
-  const hasMovement = movementInput.lengthSq() > 0;
-  if (hasMovement) {
-    manualInput = true;
+  if (movementInput.lengthSq() > 0) {
     clickMoving = false;
+    pendingInteraction = null;
     movementInput.normalize();
-    desiredVelocity.copy(movementInput).multiplyScalar(3.4);
-  } else {
+    desiredVelocity.copy(movementInput).multiplyScalar(4.1);
+  } else if (!clickMoving) {
     desiredVelocity.set(0, 0, 0);
   }
-  if (!manualInput && phase === 0 && !freeExplore && !modalOpen) {
-    const approach = easeInOut(sequenceTime / 4.8);
-    autoPosition.set(0, 0, 3.35).lerp(tempB.set(-1.05, 0, 0.9), approach);
-    ghost.root.position.x = damp(ghost.root.position.x, autoPosition.x, 3.4, dt);
-    ghost.root.position.z = damp(ghost.root.position.z, autoPosition.z, 3.4, dt);
-    playerVelocity.set(0, 0, 0);
-    if (approach > 0.02) ghost.root.rotation.y = damp(ghost.root.rotation.y, 0, 2.5, dt);
-  } else if (clickMoving) {
+  if (clickMoving) {
     const dx = clickTarget.x - ghost.root.position.x;
     const dz = clickTarget.z - ghost.root.position.z;
     const distance = Math.hypot(dx, dz);
     if (distance < 0.12) {
       clickMoving = false;
-      playerVelocity.set(0, 0, 0);
+      desiredVelocity.set(0, 0, 0);
+      finishPendingInteraction();
     } else {
-      desiredVelocity.set(dx / distance, 0, dz / distance).multiplyScalar(Math.min(3.4, 1.3 + distance * 1.8));
-      playerVelocity.lerp(desiredVelocity, 1 - Math.exp(-8 * dt));
-      ghost.root.position.addScaledVector(playerVelocity, dt);
-      ghost.root.rotation.y = damp(ghost.root.rotation.y, Math.atan2(dx, dz), 8, dt);
+      desiredVelocity.set(dx / distance, 0, dz / distance).multiplyScalar(Math.min(4.1, 1.3 + distance * 1.7));
     }
-  } else {
-    playerVelocity.lerp(desiredVelocity, 1 - Math.exp(-10 * dt));
-    ghost.root.position.addScaledVector(playerVelocity, dt);
-    if (playerVelocity.lengthSq() > 0.03) ghost.root.rotation.y = damp(ghost.root.rotation.y, Math.atan2(playerVelocity.x, playerVelocity.z), 8, dt);
+  }
+  playerVelocity.lerp(desiredVelocity, 1 - Math.exp(-10 * dt));
+  ghost.root.position.addScaledVector(playerVelocity, dt);
+  if (playerVelocity.lengthSq() > 0.025) {
+    ghost.root.rotation.y = damp(ghost.root.rotation.y, Math.atan2(playerVelocity.x, playerVelocity.z), 8, dt);
   }
   resolvePlayerCollision();
+  finishPendingInteraction();
   collider.position.y = 0.9;
   const bob = Math.sin(visualTime * 2.35) * 0.075;
   ghost.visual.position.y = 0.15 + bob;
@@ -377,10 +388,10 @@ function updatePlayer(dt) {
 function updateFire(system) {
   const flicker = 0.86 + Math.sin(visualTime * 7.1 + system.light.userData.phase) * 0.08 + Math.sin(visualTime * 13.7 + 1.3) * 0.045;
   system.light.intensity = system.light.userData.baseIntensity * flicker;
-  system.flameBase.scale.x = 0.48 + flicker * 0.08;
-  system.flameBase.scale.y = 1.32 + flicker * 0.22;
+  system.flameBase.scale.x = 0.5 + flicker * 0.08;
+  system.flameBase.scale.y = 1.34 + flicker * 0.24;
   system.flameMid.rotation.z = Math.sin(visualTime * 5.4 + 1.2) * 0.06;
-  system.flameCore.scale.y = 0.68 + Math.sin(visualTime * 9.2) * 0.11;
+  system.flameCore.scale.y = 0.7 + Math.sin(visualTime * 9.2) * 0.11;
   for (let i = 0; i < system.smoke.length; i += 1) {
     const puff = system.smoke[i];
     const cycle = (visualTime * puff.userData.speed + puff.userData.phase) % 5.2;
@@ -390,38 +401,69 @@ function updateFire(system) {
     puff.position.z = Math.sin(visualTime * 0.6 + i * 1.7) * 0.16;
     const size = 0.32 + normalized * 0.9;
     puff.scale.set(size, size * 0.82, 1);
-    puff.material.opacity = 0.24 * (1 - normalized) * (0.65 + flicker * 0.35);
+    puff.material.opacity = 0.2 * (1 - normalized) * (0.65 + flicker * 0.35);
   }
 }
 
-function updateDog() {
-  const data = graveyard.dog.userData;
-  if (phase === 2) {
-    const travel = (visualTime * 0.38) % 5.2;
-    const direction = travel < 2.6 ? 1 : -1;
-    const localTravel = travel < 2.6 ? travel : 5.2 - travel;
-    graveyard.dog.position.x = 5.05 + localTravel * 0.82;
-    graveyard.dog.position.z = 1.5 + Math.sin(visualTime * 0.9) * 0.38;
-    graveyard.dog.rotation.y = direction > 0 ? Math.PI * 0.5 : -Math.PI * 0.5;
-    const gait = visualTime * 10.5;
-    for (let i = 0; i < data.legs.length; i += 1) data.legs[i].rotation.x = Math.sin(gait + (i % 2) * Math.PI + (i < 2 ? 0 : Math.PI)) * 0.55;
-    data.head.position.y = 0.7 + Math.abs(Math.sin(gait * 0.5)) * 0.035;
-    data.body.position.y = 0.46 + Math.abs(Math.sin(gait)) * 0.035;
-    data.tail.rotation.z = Math.sin(visualTime * 8) * 0.22;
+const dogWanderPoints = [
+  [1.5, 1.35], [-1.8, 1.5], [-2.7, -1.45], [0.2, -1.9], [2.5, 0.8], [-3.4, 2.2], [1.1, 2.5], [2.9, -1.25],
+];
+
+function chooseDogTarget(data) {
+  data.wanderIndex = (data.wanderIndex + 1) % dogWanderPoints.length;
+  data.targetX = dogWanderPoints[data.wanderIndex][0];
+  data.targetZ = dogWanderPoints[data.wanderIndex][1];
+}
+
+function updateDog(dt) {
+  const dog = graveyard.dog;
+  const data = dog.userData;
+  data.stateTime -= dt;
+  if (data.stateTime <= 0) {
+    if (data.state === 'idle') {
+      data.state = 'sniff';
+      data.stateTime = 0.9 + random() * 0.8;
+    } else if (data.state === 'sniff') {
+      chooseDogTarget(data);
+      data.state = data.wanderIndex % 3 === 0 ? 'run' : 'wander';
+      data.stateTime = data.state === 'run' ? 1.8 : 2.8;
+    } else {
+      data.state = 'idle';
+      data.stateTime = 0.7 + random() * 0.9;
+    }
+  }
+  const moving = data.state === 'wander' || data.state === 'run';
+  if (moving) {
+    const dx = data.targetX - dog.position.x;
+    const dz = data.targetZ - dog.position.z;
+    const distance = Math.hypot(dx, dz);
+    if (distance < 0.18) {
+      data.state = 'idle';
+      data.stateTime = 0.5 + random() * 0.7;
+    } else {
+      const speed = data.state === 'run' ? 1.85 : 0.9;
+      dog.position.x += dx / distance * Math.min(speed * dt, distance);
+      dog.position.z += dz / distance * Math.min(speed * dt, distance);
+      dog.rotation.y = damp(dog.rotation.y, Math.atan2(dx, dz), 8, dt);
+      data.gait += dt * (data.state === 'run' ? 12 : 7);
+      const gait = data.gait;
+      for (let i = 0; i < data.legs.length; i += 1) data.legs[i].rotation.x = Math.sin(gait + (i % 2) * Math.PI + (i < 2 ? 0 : Math.PI)) * (data.state === 'run' ? 0.62 : 0.34);
+      data.head.position.y = 0.7 + Math.abs(Math.sin(gait * 0.5)) * 0.035;
+      data.body.position.y = 0.46 + Math.abs(Math.sin(gait)) * 0.035;
+    }
   } else {
-    graveyard.dog.position.set(0.2, 0.02, 0.95);
-    graveyard.dog.rotation.y = -0.5;
-    for (let i = 0; i < data.legs.length; i += 1) data.legs[i].rotation.x = damp(data.legs[i].rotation.x, 0, 7, 0.016);
-    data.head.position.y = 0.7 + Math.sin(visualTime * 2.1) * 0.035;
-    data.body.position.y = 0.46 + Math.sin(visualTime * 2.1 + 0.5) * 0.018;
-    data.tail.rotation.z = Math.sin(visualTime * 2.2) * 0.14;
+    for (let i = 0; i < data.legs.length; i += 1) data.legs[i].rotation.x = damp(data.legs[i].rotation.x, 0, 8, dt);
+    data.head.position.y = damp(data.head.position.y, data.state === 'sniff' ? 0.5 : 0.7, 6, dt);
+    data.head.rotation.x = damp(data.head.rotation.x, data.state === 'sniff' ? 0.28 : 0, 6, dt);
+    data.body.position.y = damp(data.body.position.y, data.state === 'sniff' ? 0.42 : 0.46, 6, dt);
   }
+  data.tail.rotation.z = Math.sin(visualTime * (data.state === 'run' ? 10 : 4)) * (data.state === 'run' ? 0.28 : 0.14);
 }
 
-function updateSkeletons() {
+function updateSkeletons(dt) {
   if (graveyard.skeleton) {
-    graveyard.skeleton.rotation.z = Math.sin(visualTime * 1.1) * 0.012;
-    graveyard.skeleton.userData.head.rotation.y = Math.sin(visualTime * 0.65) * 0.08;
+    graveyard.skeleton.rotation.z = damp(graveyard.skeleton.rotation.z, Math.sin(visualTime * 1.1) * 0.012, 3, dt);
+    graveyard.skeleton.userData.head.rotation.y = damp(graveyard.skeleton.userData.head.rotation.y, Math.sin(visualTime * 0.65) * 0.08, 3, dt);
   }
   if (crypt.coffin?.skeleton) {
     const breath = 1 + Math.sin(visualTime * 1.15) * 0.012;
@@ -446,10 +488,14 @@ function updateLanterns() {
 function updateLeaves() {
   for (let i = 0; i < leaves.length; i += 1) {
     const leaf = leaves[i];
+    if (leaf.userData.baseX === undefined) {
+      leaf.userData.baseX = leaf.position.x;
+      leaf.userData.baseZ = leaf.position.z;
+    }
     const cycle = (visualTime * leaf.userData.speed + leaf.userData.phase) % 10;
     leaf.position.y = 5.5 - cycle * 0.52;
-    leaf.position.x += Math.sin(visualTime * 0.55 + i) * 0.0018;
-    leaf.position.z += Math.cos(visualTime * 0.48 + i) * 0.0014;
+    leaf.position.x = leaf.userData.baseX + Math.sin(visualTime * 0.55 + i) * 0.12;
+    leaf.position.z = leaf.userData.baseZ + Math.cos(visualTime * 0.48 + i) * 0.1;
     leaf.rotation.x += 0.012;
     leaf.rotation.z += 0.018;
     if (leaf.position.y < 0.16) leaf.position.y = 5.5;
@@ -471,15 +517,15 @@ function updatePortal() {
   if (!crypt.portal) return;
   crypt.portal.portal.material.opacity = 0.7 + Math.sin(visualTime * 2.7) * 0.1;
   crypt.portal.halo.material.opacity = 0.42 + Math.sin(visualTime * 2.7) * 0.1;
-  const pulse = 7.4 + Math.sin(visualTime * 2.3) * 1.4 + Math.sin(visualTime * 5.1) * 0.45;
+  const pulse = 9.5 + Math.sin(visualTime * 2.3) * 1.4 + Math.sin(visualTime * 5.1) * 0.45;
   crypt.portal.light.intensity = pulse;
   crypt.portal.halo.scale.set(0.82 + Math.sin(visualTime * 2.3) * 0.08, 1.18 + Math.sin(visualTime * 2.3) * 0.1, 0.08);
 }
 
-function updateAnimations() {
+function updateAnimations(dt) {
   if (graveyard.fire) updateFire(graveyard.fire);
-  updateDog();
-  updateSkeletons();
+  updateDog(dt);
+  updateSkeletons(dt);
   updateLanterns();
   updateLeaves();
   updateEmbers();
@@ -490,13 +536,13 @@ function updateNameplates() {
   const width = renderer.domElement.clientWidth;
   const height = renderer.domElement.clientHeight;
   for (const label of nameplates) {
-    const locationVisible = label.location === (phase === 1 ? crypt.group : graveyard.group) && label.location.visible;
+    const locationVisible = label.location.visible;
     label.object.getWorldPosition(nameWorld);
     nameWorld.y += label.offsetY;
     const distance = Math.hypot(nameWorld.x - ghost.root.position.x, nameWorld.z - ghost.root.position.z);
-    const proximity = Math.max(0, Math.min(1, 1 - (distance - 0.8) / Math.max(0.1, label.radius)));
-    const baseOpacity = label.kind === 'portal' ? 0.3 : 0.12;
-    const targetOpacity = locationVisible && distance < label.radius * 2.2 ? Math.max(baseOpacity, proximity) : 0;
+    const proximity = Math.max(0, Math.min(1, 1 - (distance - 0.65) / Math.max(0.1, label.radius)));
+    const baseOpacity = label.kind === 'dog' ? 0.14 : label.kind === 'portal' ? 0.16 : 0.1;
+    const targetOpacity = locationVisible && distance < label.radius * 2.3 ? Math.max(baseOpacity, proximity) : 0;
     label.opacity = damp(label.opacity, targetOpacity, 10, 0.05);
     nameScreen.copy(nameWorld).project(camera);
     const onScreen = nameScreen.z > -1 && nameScreen.z < 1 && nameScreen.x > -1.08 && nameScreen.x < 1.08 && nameScreen.y > -1.08 && nameScreen.y < 1.08;
@@ -507,19 +553,29 @@ function updateNameplates() {
 }
 
 function nearestInteractable() {
-  const location = activeLocation();
+  const data = activeData();
   let best = null;
   let bestDistance = Infinity;
   for (const item of interactables) {
-    if (item.location !== location.group) continue;
+    if (item.location !== data.group) continue;
     item.hit.getWorldPosition(tempA);
-    const distance = tempA.distanceTo(ghost.root.position);
+    const distance = Math.hypot(tempA.x - ghost.root.position.x, tempA.z - ghost.root.position.z);
     if (distance < item.radius && distance < bestDistance) {
       best = item;
       bestDistance = distance;
     }
   }
   return best;
+}
+
+function updateInteractionPrompt() {
+  const item = nearestInteractable();
+  if (!item || modalOpen || paused) {
+    interactionPrompt.hidden = true;
+    return;
+  }
+  interactionPrompt.hidden = false;
+  interactionText.textContent = item.prompt;
 }
 
 function interactWith(item) {
@@ -535,22 +591,34 @@ function handleCanvasClick(event) {
   pointer.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
   pointer.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
   raycaster.setFromCamera(pointer, camera);
-  const location = activeLocation();
-  const hits = raycaster.intersectObjects(interactables.filter((item) => item.location === location.group).map((item) => item.hit), false);
+  const data = activeData();
+  const activeHits = interactables.filter((item) => item.location === data.group).map((item) => item.hit);
+  const hits = raycaster.intersectObjects(activeHits, false);
   if (hits.length > 0) {
     const item = interactables.find((candidate) => candidate.hit === hits[0].object);
     if (item) {
-      interactWith(item);
+      item.hit.getWorldPosition(tempA);
+      const distance = Math.hypot(tempA.x - ghost.root.position.x, tempA.z - ghost.root.position.z);
+      if (distance <= item.radius + 0.45) {
+        interactWith(item);
+      } else {
+        pendingInteraction = item;
+        clickTarget.set(tempA.x, 0, tempA.z);
+        clickTarget.x = Math.max(data.bounds.minX, Math.min(data.bounds.maxX, clickTarget.x));
+        clickTarget.z = Math.max(data.bounds.minZ, Math.min(data.bounds.maxZ, clickTarget.z));
+        clickMoving = true;
+        showToast('Walk closer to take a look.');
+      }
       return;
     }
   }
-  groundPlane.constant = phase === 1 ? -0.11 : -0.08;
+  groundPlane.constant = location === 'crypt' ? -0.11 : -0.08;
   if (raycaster.ray.intersectPlane(groundPlane, clickPoint)) {
-    clickTarget.set(phase === 1 ? Math.max(-3.5, Math.min(3.5, clickPoint.x)) : Math.max(-6.4, Math.min(6.4, clickPoint.x)), 0, phase === 1 ? Math.max(-2.65, Math.min(2.6, clickPoint.z)) : Math.max(-4.8, Math.min(4.5, clickPoint.z)));
+    clickTarget.set(clickPoint.x, 0, clickPoint.z);
+    clickTarget.x = Math.max(data.bounds.minX, Math.min(data.bounds.maxX, clickTarget.x));
+    clickTarget.z = Math.max(data.bounds.minZ, Math.min(data.bounds.maxZ, clickTarget.z));
+    pendingInteraction = null;
     clickMoving = true;
-    manualInput = true;
-    freeExplore = true;
-    updateSequenceUI();
   }
 }
 
@@ -563,7 +631,7 @@ function handleKeyDown(event) {
     return;
   }
   if (key === 'e') {
-    interactWith(nearestInteractable());
+    if (!modalOpen) interactWith(nearestInteractable());
     return;
   }
   if (key === 'p') {
@@ -571,7 +639,7 @@ function handleKeyDown(event) {
     return;
   }
   if (key === 'r') {
-    replayIntro();
+    resetPosition();
     return;
   }
   if (key === 'arrowup') keys.w = true;
@@ -599,12 +667,11 @@ function setupUI() {
     toolsButton.setAttribute('aria-expanded', String(open));
   });
   pauseButton.addEventListener('click', () => setPaused(!paused));
-  replayButton.addEventListener('click', replayIntro);
+  replayButton.addEventListener('click', resetPosition);
   modalClose.addEventListener('click', closeGraveModal);
   modal.addEventListener('click', (event) => {
     if (event.target.dataset.closeModal !== undefined) closeGraveModal();
   });
-  document.querySelectorAll('[data-place]').forEach((button) => button.addEventListener('click', () => enterFreePlace(button.dataset.place)));
   document.addEventListener('click', (event) => {
     if (!event.target.closest('.tools')) closeTools();
   });
@@ -629,15 +696,15 @@ function frame(now) {
   lastFrameTime = now;
   if (!paused) {
     visualTime += dt;
-    updateSequence(dt);
     updatePlayer(dt);
-    updateAnimations();
+    updateAnimations(dt);
     updateToast(dt);
     updateCamera(dt);
   }
   camera.updateMatrixWorld();
   renderer.render(scene, camera);
   updateNameplates();
+  updateInteractionPrompt();
   requestAnimationFrame(frame);
 }
 
@@ -654,14 +721,27 @@ function boot() {
     return;
   }
   setupWorld();
-  camera = new THREE.OrthographicCamera(-8, 8, 6, -6, 0.1, 100);
-  camera.position.set(14, 20, 16);
+  camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 120);
   setupUI();
-  setLocation(0, false);
+  setLocation('graveyard', true);
   resize();
   window.addEventListener('resize', resize);
   if (typeof ResizeObserver !== 'undefined') new ResizeObserver(resize).observe(document.documentElement);
-  window.__HALLOWEEN_APP__ = { scene, camera, renderer, get phase() { return phase; }, setLocation, replayIntro, openGraveModal, closeGraveModal, tick: frame };
+  window.__HALLOWEEN_APP__ = {
+    scene,
+    camera,
+    renderer,
+    get phase() { return location === 'crypt' ? 1 : 0; },
+    get location() { return location; },
+    setLocation,
+    resetPosition,
+    enterCrypt,
+    leaveCrypt,
+    replayIntro: resetPosition,
+    openGraveModal,
+    closeGraveModal,
+    tick: frame,
+  };
   requestAnimationFrame(frame);
   window.setTimeout(() => loading.classList.add('is-ready'), 320);
 }

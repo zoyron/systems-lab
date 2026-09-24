@@ -55,8 +55,9 @@ export function createSkeleton(options = {}) {
 
 export function createDog() {
   const group = new THREE.Group();
-  const fur = standardMaterial(0xf5f0dc, { roughness: 1 });
-  const furShade = standardMaterial(0xd9d1bd, { roughness: 1 });
+  group.name = 'Zozo';
+  const fur = standardMaterial(0xf7f2e1, { roughness: 1, emissive: 0x718477, emissiveIntensity: 0.14 });
+  const furShade = standardMaterial(0xdcd4c2, { roughness: 1 });
   const body = addSphere(group, fur, 0, 0.46, 0, 0.46, 0.38, 0.68);
   const head = new THREE.Group();
   head.position.set(0, 0.7, 0.5);
@@ -85,13 +86,20 @@ export function createDog() {
   group.userData.ears = [earLeft, earRight];
   group.userData.legs = legs;
   group.userData.tail = tail;
+  group.userData.state = 'idle';
+  group.userData.stateTime = 0.8;
+  group.userData.targetX = 1.5;
+  group.userData.targetZ = 1.35;
+  group.userData.wanderIndex = 0;
+  group.userData.gait = 0;
   return group;
 }
 
 export function createLutin() {
   const group = new THREE.Group();
-  const skin = standardMaterial(0x9b4d38, { roughness: 0.9 });
-  const cloth = standardMaterial(0x5c3140, { roughness: 1 });
+  group.name = 'Lutin';
+  const skin = standardMaterial(0xb36243, { roughness: 0.9 });
+  const cloth = standardMaterial(0x6c3b4b, { roughness: 1 });
   addCone(group, cloth, 0, 0.36, 0, 0.36, 0.72);
   addSphere(group, skin, 0, 0.88, 0, 0.28, 0.3, 0.26);
   addCone(group, materials.woodDark, -0.19, 1.18, 0, 0.07, 0.24, 0, 0, -0.3);
@@ -102,11 +110,29 @@ export function createLutin() {
   addCylinderBetween(group, materials.woodDark, [0.13, 0.65, 0], [0.45, 0.25, 0.05], 0.045);
   const glow = addGlowSphere(group, materials.orangeGlow, 0, 0.95, 0.1, 0.36);
   glow.userData.noShadow = true;
-  const light = addPointLight(group, 0xff7d36, 3.4, 4.2, 0, 1.0, 0.1);
-  light.userData.baseIntensity = 3.4;
+  const light = addPointLight(group, 0xff7d36, 4.8, 6, 0, 1.0, 0.1);
+  light.userData.baseIntensity = 4.8;
   light.userData.phase = 1.4;
   group.userData.glow = glow;
   group.userData.light = light;
+  return group;
+}
+
+export function createPumpkinFigure() {
+  const group = new THREE.Group();
+  group.name = 'Pumpkin-headed figure';
+  addCone(group, materials.burgundy, 0, 0.36, 0, 0.38, 0.72);
+  addBox(group, materials.woodDark, 0, 0.74, 0, 0.48, 0.52, 0.38, 0, 0.2, 0);
+  addSphere(group, materials.orange, 0, 1.15, 0.04, 0.38, 0.35, 0.38);
+  addCylinder(group, materials.woodDark, 0, 1.52, 0.04, 0.06, 0.2);
+  addSphere(group, materials.black, -0.12, 1.22, 0.37, 0.06, 0.08, 0.025);
+  addSphere(group, materials.black, 0.12, 1.22, 0.37, 0.06, 0.08, 0.025);
+  addBox(group, materials.black, 0, 1.04, 0.38, 0.15, 0.04, 0.025, 0, 0, 0.08);
+  addCylinder(group, materials.woodDark, -0.31, 0.42, 0, 0.055, 0.7, 0, 0, -0.1);
+  addCylinder(group, materials.woodDark, 0.31, 0.42, 0, 0.055, 0.7, 0, 0, 0.1);
+  const light = addPointLight(group, 0xff9a42, 1.8, 4, 0, 1.2, 0.1);
+  light.userData.baseIntensity = 1.8;
+  light.userData.phase = 2.7;
   return group;
 }
 
@@ -127,18 +153,28 @@ export function createGhost() {
   shape.quadraticCurveTo(-0.62, 0.02, -0.83, 0.22);
   const ghostGeo = new THREE.ExtrudeGeometry(shape, { depth: 0.38, bevelEnabled: true, bevelSegments: 3, bevelSize: 0.08, bevelThickness: 0.08, curveSegments: 8 });
   ghostGeo.translate(0, 0, -0.19);
-  visual.add(new THREE.Mesh(ghostGeo, materials.ghost));
+  const ghostMesh = new THREE.Mesh(ghostGeo, materials.ghost);
+  visual.add(ghostMesh);
+  const rimMaterial = new THREE.MeshBasicMaterial({ color: 0xd9f0df, transparent: true, opacity: 0.16, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide });
+  const rim = new THREE.Mesh(ghostGeo, rimMaterial);
+  rim.scale.setScalar(1.035);
+  rim.userData.noShadow = true;
+  visual.add(rim);
   addSphere(visual, materials.black, -0.28, 1.15, 0.3, 0.105, 0.17, 0.045);
   addSphere(visual, materials.black, 0.28, 1.15, 0.3, 0.105, 0.17, 0.045);
   addSphere(visual, materials.black, 0, 0.88, 0.31, 0.08, 0.035, 0.025);
+  const fill = new THREE.PointLight(0xd8eee0, 1.6, 5.2, 2);
+  fill.position.set(0, 1.05, 0.35);
+  root.add(fill);
   const shadow = new THREE.Mesh(new THREE.CircleGeometry(0.72, 24), new THREE.MeshBasicMaterial({ color: 0x10130f, transparent: true, opacity: 0.25, depthWrite: false }));
   shadow.rotation.x = -Math.PI * 0.5;
   shadow.position.y = 0.045;
   shadow.scale.set(1.25, 0.72, 1);
+  shadow.userData.noShadow = true;
   root.add(shadow);
   const collider = new THREE.Mesh(new THREE.CylinderGeometry(0.56, 0.62, 1.8, 12), new THREE.MeshBasicMaterial({ color: 0x9ab2a1, transparent: true, opacity: 0.025, depthWrite: false }));
   collider.position.y = 0.9;
   collider.userData.noShadow = true;
   root.add(collider);
-  return { root, visual, collider, shadow };
+  return { root, visual, collider, shadow, fill };
 }
