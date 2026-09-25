@@ -1,4 +1,4 @@
-import { Vector3 } from 'three'
+import { Quaternion, Vector3 } from 'three'
 import { describe, expect, it } from 'vitest'
 import { FLIGHT, WORLD } from '../src/core/config'
 import { getSurfaceHeight, isRunwayPoint } from '../src/core/heightfield'
@@ -80,6 +80,32 @@ describe('FlightModel arcade controls', () => {
     expect(Math.abs(model.state.heading - startHeading)).toBeGreaterThan(0.03)
     expect(Math.abs(model.state.pitch)).toBeLessThan(0.01)
     expect(Math.abs(model.state.roll)).toBeLessThan(0.01)
+  })
+
+  it('dampens raw attitude targets before they reach the flight state', () => {
+    const model = new FlightModel()
+    placeAirborne(model, 120, 48)
+
+    model.step(FLIGHT.fixedStep, controls({ throttle: 0.8, roll: 1, rollActive: true }))
+
+    expect(model.controlState.roll).toBeGreaterThan(0)
+    expect(model.controlState.roll).toBeLessThan(1)
+    expect(Math.abs(model.state.roll)).toBeLessThan(0.1)
+  })
+
+  it('keeps fixed-step control response independent of render-frame chunking', () => {
+    const oneCall = new FlightModel()
+    const twoCalls = new FlightModel()
+    placeAirborne(oneCall, 120, 48)
+    placeAirborne(twoCalls, 120, 48)
+    const input = controls({ throttle: 0.8, pitch: 0.5, roll: -0.7, yaw: 0.25, pitchActive: true, rollActive: true, yawActive: true })
+
+    oneCall.step(FLIGHT.fixedStep * 2, input)
+    twoCalls.step(FLIGHT.fixedStep, input)
+    twoCalls.step(FLIGHT.fixedStep, input)
+
+    expect(oneCall.position.distanceTo(twoCalls.position)).toBeLessThan(1e-8)
+    expect(oneCall.orientation.angleTo(twoCalls.orientation)).toBeLessThan(1e-8)
   })
 
   it('takes off after forward taxi speed and throttle', () => {
@@ -183,9 +209,20 @@ describe('FlightModel arcade controls', () => {
     const z = -1000
     terrain.position.set(x, getSurfaceHeight(x, z) + 3, z)
     terrain.velocity.set(0, 0, -60)
-    const terrainEvent = advance(terrain, 360, controls()).find((event) => event.type === 'crash')
+    const terrainEvent = advance(terrain, 360, controls({
+      throttle: 1,
+      pitch: 1,
+      roll: 1,
+      pitchActive: true,
+      rollActive: true,
+      flaps: 1,
+    })).find((event) => event.type === 'crash')
     expect(terrainEvent?.type).toBe('crash')
     expect(terrainEvent?.reason).toBe('terrain')
+    expect(terrain.state.throttle).toBe(0)
+    expect(terrain.state.flaps).toBe(0)
+    expect(terrain.controlState.pitch).toBe(0)
+    expect(terrain.controlState.roll).toBe(0)
     terrain.reset()
     expect(isRunwayPoint(terrain.position.x, terrain.position.z)).toBe(true)
 
@@ -197,6 +234,34 @@ describe('FlightModel arcade controls', () => {
     expect(waterEvent?.reason).toBe('water')
     water.reset()
     expect(water.state.grounded).toBe(true)
+  })
+
+  it('interpolates the rendered pose across the latest fixed physics step', () => {
+    const model = new FlightModel()
+    placeAirborne(model, 120, 48)
+    const poseStart = model.position.clone()
+
+    model.step(FLIGHT.fixedStep, controls({ throttle: 0.8 }))
+    const poseCurrent = model.position.clone()
+    const midpointPosition = new Vector3()
+    const midpointOrientation = new Quaternion()
+    model.writeInterpolatedPose(midpointPosition, midpointOrientation, 0.5)
+    const midpointTravel = midpointPosition.distanceTo(poseStart)
+    const fullStepTravel = poseCurrent.distanceTo(poseStart)
+
+    expect(midpointTravel).toBeGreaterThan(0)
+    expect(midpointTravel).toBeLessThan(fullStepTravel)
+    expect(Number.isFinite(midpointOrientation.w)).toBe(true)
+
+    model.step(FLIGHT.fixedStep * 0.75, controls({ throttle: 0.8 }))
+    const latePosition = new Vector3()
+    const lateOrientation = new Quaternion()
+    model.writeInterpolatedPose(latePosition, lateOrientation)
+    const lateTravel = latePosition.distanceTo(poseStart)
+    expect(model.renderInterpolationAlpha).toBeGreaterThan(0)
+    expect(model.renderInterpolationAlpha).toBeLessThan(1)
+    expect(lateTravel).toBeGreaterThan(midpointTravel)
+    expect(lateTravel).toBeLessThan(fullStepTravel)
   })
 
   it('reports a safe runway touchdown and clean landing', () => {

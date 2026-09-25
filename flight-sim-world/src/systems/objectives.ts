@@ -125,7 +125,7 @@ export class Objectives {
       return
     }
     const angle = Math.atan2(deltaZ, deltaX)
-    if (this.previousLighthouseAngle !== null && deltaTime > 0 && deltaTime < 0.25) {
+    if (this.previousLighthouseAngle !== null && deltaTime > 0 && deltaTime <= 0.25) {
       const signedDelta = normalizeAngle(angle - this.previousLighthouseAngle)
       if (Math.abs(signedDelta) > 0.0001) {
         if (this.lighthouseDirection === null) this.lighthouseDirection = signedDelta > 0 ? 1 : -1

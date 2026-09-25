@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { LANDMARKS, WORLD } from '../core/config'
-import type { LandmarkDefinition } from '../core/config'
+import type { LandmarkDefinition, TimeOfDayPreset } from '../core/config'
 import {
   distanceToRiver,
   getRegionAt as getHeightfieldRegion,
@@ -11,7 +11,7 @@ import {
   isRunwayPoint,
   isWaterAt,
 } from '../core/heightfield'
-import { clamp, seededRandom, smoothstep } from '../core/math'
+import { clamp, lerp, seededRandom, smoothstep } from '../core/math'
 
 export type WorldPosition =
   | THREE.Vector3
@@ -57,6 +57,18 @@ type HousePalette = {
   wall: THREE.Color
   roof: THREE.Color
   trim: THREE.Color
+}
+
+type LampMaterialRecord = {
+  material: THREE.MeshStandardMaterial
+  baseIntensity: number
+  phase: number
+}
+
+type LampLightRecord = {
+  light: THREE.PointLight
+  baseIntensity: number
+  phase: number
 }
 
 const positionParts = (position: WorldPosition): [number, number, number] => {
@@ -175,11 +187,22 @@ export class World {
   private readonly lanternLight: THREE.PointLight
   private readonly lanternMaterial: THREE.MeshStandardMaterial
   private readonly worldSkirt: THREE.Mesh
+  private hemisphereLight!: THREE.HemisphereLight
+  private keyLight!: THREE.DirectionalLight
+  private horizonFillLight!: THREE.DirectionalLight
+  private sceneFog!: THREE.Fog
+  private sceneBackground!: THREE.Color
+  private lighthouseBeamMaterial!: THREE.MeshBasicMaterial
+  private worldCloudMaterial!: THREE.MeshStandardMaterial
+  private lanternRingMaterial!: THREE.MeshStandardMaterial
+  private readonly lampMaterialRecords: LampMaterialRecord[] = []
+  private readonly lampLightRecords: LampLightRecord[] = []
+  private lampFactor = 1
 
   constructor(scene: THREE.Scene) {
     this.scene = scene
     this.group.name = 'WindwardWorld'
-    this.lighting.name = 'DuskLighting'
+    this.lighting.name = 'TimeOfDayLighting'
     this.cloudLayer.name = 'WorldCloudLayer'
     this.group.add(this.lighting, this.cloudLayer)
     this.setupLighting()
@@ -218,6 +241,55 @@ export class World {
     scene.add(this.group)
   }
 
+  applyTimeOfDay(from: TimeOfDayPreset, to: TimeOfDayPreset, amount: number): void {
+    const mix = (start: number, end: number): number => lerp(start, end, amount)
+    const setColor = (color: THREE.Color, start: number, end: number): void => {
+      color.setHex(Math.round(mix(start, end)))
+    }
+    const setPosition = (
+      target: THREE.Vector3,
+      start: readonly [number, number, number],
+      end: readonly [number, number, number],
+    ): void => {
+      target.set(mix(start[0], end[0]), mix(start[1], end[1]), mix(start[2], end[2]))
+    }
+
+    setColor(this.hemisphereLight.color, from.hemisphereSky, to.hemisphereSky)
+    setColor(this.hemisphereLight.groundColor, from.hemisphereGround, to.hemisphereGround)
+    this.hemisphereLight.intensity = mix(from.hemisphereIntensity, to.hemisphereIntensity)
+    setColor(this.keyLight.color, from.keyColor, to.keyColor)
+    this.keyLight.intensity = mix(from.keyIntensity, to.keyIntensity)
+    setPosition(this.keyLight.position, from.keyPosition, to.keyPosition)
+    setColor(this.horizonFillLight.color, from.fillColor, to.fillColor)
+    this.horizonFillLight.intensity = mix(from.fillIntensity, to.fillIntensity)
+    setPosition(this.horizonFillLight.position, from.fillPosition, to.fillPosition)
+    setColor(this.sceneFog.color, from.fogColor, to.fogColor)
+    setColor(this.sceneBackground, from.backgroundColor, to.backgroundColor)
+    this.sceneFog.near = mix(from.fogNear, to.fogNear)
+    this.sceneFog.far = mix(from.fogFar, to.fogFar)
+    const setUniformColor = (value: unknown, start: number, end: number): void => {
+      if (value instanceof THREE.Color) setColor(value, start, end)
+    }
+    setUniformColor(this.waterMaterial.uniforms.uDeepColor?.value, from.waterDeep, to.waterDeep)
+    setUniformColor(this.waterMaterial.uniforms.uShallowColor?.value, from.waterShallow, to.waterShallow)
+    setUniformColor(this.waterMaterial.uniforms.uFogColor?.value, from.fogColor, to.fogColor)
+    const fogNear = this.waterMaterial.uniforms.uFogNear
+    const fogFar = this.waterMaterial.uniforms.uFogFar
+    if (fogNear !== undefined) fogNear.value = this.sceneFog.near
+    if (fogFar !== undefined) fogFar.value = this.sceneFog.far
+    this.lampFactor = Math.max(0, mix(from.lampIntensity, to.lampIntensity))
+    setColor(this.worldCloudMaterial.color, from.worldCloudColor, to.worldCloudColor)
+    this.worldCloudMaterial.opacity = mix(from.worldCloudOpacity, to.worldCloudOpacity)
+    this.lanternRingMaterial.emissiveIntensity = 2.4 * this.lampFactor
+    for (const record of this.lampMaterialRecords) {
+      record.material.emissiveIntensity = record.baseIntensity * this.lampFactor
+    }
+    for (const record of this.lampLightRecords) {
+      record.light.intensity = record.baseIntensity * this.lampFactor
+    }
+    this.lighthouseBeamMaterial.opacity = 0.14 * this.lampFactor
+  }
+
   update(time: number, cameraPosition: WorldPosition): void {
     const [, cameraHeightValue] = positionParts(cameraPosition)
     const waterTime = this.waterMaterial.uniforms.uTime
@@ -227,9 +299,10 @@ export class World {
     this.lighthouseBeam.rotation.y = time * 0.34
     this.lanternRing.rotation.y = time * 0.12
     this.lanternRing.position.y = WORLD.waterLevel + 38 + Math.sin(time * 0.8) * 0.65
-    this.lanternMaterial.emissiveIntensity = 2.8 + Math.sin(time * 1.7) * 0.45
+    this.lanternMaterial.emissiveIntensity = (2.8 + Math.sin(time * 1.7) * 0.45) * this.lampFactor
     const cameraHeight = clamp(cameraHeightValue / 900, 0, 1)
-    this.lanternLight.intensity = 12 + cameraHeight * 7 + Math.sin(time * 1.3) * 1.5
+    this.lanternLight.intensity = (12 + cameraHeight * 7 + Math.sin(time * 1.3) * 1.5) * this.lampFactor
+    this.updateLampAnimation(time)
 
     const sock = this.windsock.userData.sock
     if (sock instanceof THREE.Object3D) {
@@ -282,6 +355,36 @@ export class World {
     return geometry
   }
 
+  private trackLampMaterial<T extends THREE.MeshStandardMaterial>(material: T): T {
+    this.trackMaterial(material)
+    this.lampMaterialRecords.push({
+      material,
+      baseIntensity: material.emissiveIntensity,
+      phase: this.lampMaterialRecords.length * 0.73,
+    })
+    return material
+  }
+
+  private trackLampLight(light: THREE.PointLight): THREE.PointLight {
+    this.lampLightRecords.push({
+      light,
+      baseIntensity: light.intensity,
+      phase: this.lampLightRecords.length * 0.91,
+    })
+    return light
+  }
+
+  private updateLampAnimation(time: number): void {
+    for (const record of this.lampMaterialRecords) {
+      const pulse = 1 + Math.sin(time * 1.45 + record.phase) * 0.025
+      record.material.emissiveIntensity = record.baseIntensity * this.lampFactor * pulse
+    }
+    for (const record of this.lampLightRecords) {
+      const pulse = 1 + Math.sin(time * 1.2 + record.phase) * 0.04
+      record.light.intensity = record.baseIntensity * this.lampFactor * pulse
+    }
+  }
+
   private addMesh(
     parent: THREE.Object3D,
     name: string,
@@ -322,33 +425,35 @@ export class World {
   }
 
   private setupLighting(): void {
-    const hemisphere = new THREE.HemisphereLight(0x9b8ab4, 0x353642, 1.45)
-    hemisphere.name = 'VioletAmbient'
-    this.lighting.add(hemisphere)
+    this.hemisphereLight = new THREE.HemisphereLight(0x9b8ab4, 0x353642, 1.45)
+    this.hemisphereLight.name = 'VioletAmbient'
+    this.lighting.add(this.hemisphereLight)
 
-    const moonLight = new THREE.DirectionalLight(0xc6c4ff, 1.65)
-    moonLight.name = 'MoonKeyLight'
-    moonLight.position.set(-820, 1280, -680)
-    moonLight.castShadow = true
-    moonLight.shadow.mapSize.set(2048, 2048)
-    moonLight.shadow.camera.left = -1850
-    moonLight.shadow.camera.right = 1850
-    moonLight.shadow.camera.top = 1850
-    moonLight.shadow.camera.bottom = -1850
-    moonLight.shadow.camera.near = 20
-    moonLight.shadow.camera.far = 3600
-    moonLight.shadow.bias = -0.00025
-    moonLight.shadow.normalBias = 0.7
-    this.lighting.add(moonLight)
-    this.lighting.add(moonLight.target)
+    this.keyLight = new THREE.DirectionalLight(0xc6c4ff, 1.65)
+    this.keyLight.name = 'MoonKeyLight'
+    this.keyLight.position.set(-820, 1280, -680)
+    this.keyLight.castShadow = true
+    this.keyLight.shadow.mapSize.set(2048, 2048)
+    this.keyLight.shadow.radius = 2.5
+    this.keyLight.shadow.camera.left = -1850
+    this.keyLight.shadow.camera.right = 1850
+    this.keyLight.shadow.camera.top = 1850
+    this.keyLight.shadow.camera.bottom = -1850
+    this.keyLight.shadow.camera.near = 20
+    this.keyLight.shadow.camera.far = 3600
+    this.keyLight.shadow.bias = -0.00025
+    this.keyLight.shadow.normalBias = 0.7
+    this.lighting.add(this.keyLight, this.keyLight.target)
 
-    const horizonFill = new THREE.DirectionalLight(0xf0a06d, 0.48)
-    horizonFill.name = 'AmberHorizonFill'
-    horizonFill.position.set(760, 420, -920)
-    this.lighting.add(horizonFill)
+    this.horizonFillLight = new THREE.DirectionalLight(0xf0a06d, 0.48)
+    this.horizonFillLight.name = 'AmberHorizonFill'
+    this.horizonFillLight.position.set(760, 420, -920)
+    this.lighting.add(this.horizonFillLight)
 
-    this.scene.fog = new THREE.Fog(0x76617a, 980, 3150)
+    this.sceneFog = new THREE.Fog(0x76617a, 980, 3150)
+    this.scene.fog = this.sceneFog
     this.scene.background = new THREE.Color(0x21162f)
+    this.sceneBackground = this.scene.background
   }
 
   private addLandmarkAnchors(): void {
@@ -627,7 +732,7 @@ export class World {
     const darkMaterial = this.trackMaterial(
       new THREE.MeshStandardMaterial({ color: 0x252a32, roughness: 0.86, flatShading: true }),
     )
-    const warmMaterial = this.trackMaterial(
+    const warmMaterial = this.trackLampMaterial(
       new THREE.MeshStandardMaterial({
         color: 0xffb84d,
         emissive: 0xff6d2b,
@@ -709,7 +814,7 @@ export class World {
       }
     }
     for (let index = 0; index < 6; index += 1) {
-      const lamp = new THREE.PointLight(0xffa43c, 24, 105, 2)
+      const lamp = this.trackLampLight(new THREE.PointLight(0xffa43c, 24, 105, 2))
       lamp.name = `RunwayPointLight${index + 1}`
       lamp.position.set(
         centerX + (index % 2 === 0 ? -23 : 23),
@@ -949,7 +1054,7 @@ export class World {
     )
     roof.rotation.y = Math.PI * 0.25
     this.addBox(farm, 'BarnDoor', [13, 12, 1], new THREE.Vector3(-27, 7, -7.6), woodMaterial)
-    this.addBox(farm, 'BarnWindow', [7, 5, 1], new THREE.Vector3(-8, 12, -7.6), this.trackMaterial(
+    this.addBox(farm, 'BarnWindow', [7, 5, 1], new THREE.Vector3(-8, 12, -7.6), this.trackLampMaterial(
       new THREE.MeshStandardMaterial({ color: 0xe3a45b, emissive: 0xb85b2c, emissiveIntensity: 0.8 }),
     ))
     const silo = this.addMesh(
@@ -1070,7 +1175,7 @@ export class World {
   }
 
   private createVillages(): void {
-    const windowMaterial = this.trackMaterial(
+    const windowMaterial = this.trackLampMaterial(
       new THREE.MeshStandardMaterial({
         color: 0xffc46c,
         emissive: 0xff7d32,
@@ -1162,7 +1267,7 @@ export class World {
           angle,
         )
       }
-      const villageLight = new THREE.PointLight(0xffa04d, 18, 160, 2)
+      const villageLight = this.trackLampLight(new THREE.PointLight(0xffa04d, 18, 160, 2))
       villageLight.position.set(village.x, centerY + 24, village.z)
       this.lighting.add(villageLight)
       this.group.add(villageGroup)
@@ -1342,7 +1447,7 @@ export class World {
     const darkMaterial = this.trackMaterial(
       new THREE.MeshStandardMaterial({ color: 0x303744, roughness: 0.8, flatShading: true }),
     )
-    const warmMaterial = this.trackMaterial(
+    const warmMaterial = this.trackLampMaterial(
       new THREE.MeshStandardMaterial({
         color: 0xffc36a,
         emissive: 0xff762d,
@@ -1388,7 +1493,7 @@ export class World {
     roof.rotation.y = Math.PI * 0.125
     this.lighthouseBeam.name = 'RotatingLighthouseBeam'
     this.lighthouseBeam.position.set(0, 72 + WORLD.lighthouse.baseHeight * 0.5, 0)
-    const beamMaterial = this.trackMaterial(
+    this.lighthouseBeamMaterial = this.trackMaterial(
       new THREE.MeshBasicMaterial({
         color: 0xffd38c,
         transparent: true,
@@ -1403,7 +1508,7 @@ export class World {
       this.lighthouseBeam,
       'LighthouseLightCone',
       new THREE.ConeGeometry(30, 220, 12, 1, true),
-      beamMaterial,
+      this.lighthouseBeamMaterial,
       new THREE.Vector3(96, 0, 0),
       false,
       false,
@@ -1419,7 +1524,7 @@ export class World {
       false,
     )
     this.lighthouse.add(this.lighthouseBeam)
-    const beacon = new THREE.PointLight(0xffa343, 22, 170, 2)
+    const beacon = this.trackLampLight(new THREE.PointLight(0xffa343, 22, 170, 2))
     beacon.position.set(WORLD.lighthouse.x, groundY + 84, WORLD.lighthouse.z)
     this.lighting.add(beacon)
     this.group.add(this.lighthouse)
@@ -1429,7 +1534,7 @@ export class World {
     const centerX = getRiverCenterX(-360)
     this.lanternRing.name = 'FloatingRiverLanternRing'
     this.lanternRing.position.set(centerX, WORLD.waterLevel + 38, -360)
-    const ringMaterial = this.trackMaterial(
+    this.lanternRingMaterial = this.trackMaterial(
       new THREE.MeshStandardMaterial({
         color: 0xf09b4a,
         emissive: 0xd85b2e,
@@ -1441,7 +1546,7 @@ export class World {
       this.lanternRing,
       'LanternRing',
       new THREE.TorusGeometry(24, 0.7, 8, 40),
-      ringMaterial,
+      this.lanternRingMaterial,
       new THREE.Vector3(0, 0, 0),
       false,
       false,
@@ -1467,7 +1572,7 @@ export class World {
 
   private createClouds(): void {
     const geometry = this.trackGeometry(new THREE.IcosahedronGeometry(1, 1))
-    const material = this.trackMaterial(
+    this.worldCloudMaterial = this.trackMaterial(
       new THREE.MeshStandardMaterial({
         color: 0x96869e,
         roughness: 1,
@@ -1482,7 +1587,7 @@ export class World {
       cloud.name = `SparseWorldCloud${index + 1}`
       const pieces = 3 + (index % 3)
       for (let piece = 0; piece < pieces; piece += 1) {
-        const mesh = new THREE.Mesh(geometry, material)
+        const mesh = new THREE.Mesh(geometry, this.worldCloudMaterial)
         mesh.position.set((piece - 1) * 35, this.random() * 18, (this.random() - 0.5) * 34)
         mesh.scale.set(55 + this.random() * 35, 12 + this.random() * 12, 28 + this.random() * 24)
         mesh.rotation.y = this.random() * Math.PI
@@ -1524,7 +1629,7 @@ export class World {
     const postMaterial = this.trackMaterial(
       new THREE.MeshStandardMaterial({ color: 0x383641, roughness: 0.8, flatShading: true, vertexColors: true }),
     )
-    const bulbMaterial = this.trackMaterial(
+    const bulbMaterial = this.trackLampMaterial(
       new THREE.MeshStandardMaterial({
         color: 0xffb04c,
         emissive: 0xff682d,

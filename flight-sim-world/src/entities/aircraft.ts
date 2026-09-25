@@ -812,7 +812,7 @@ export class AircraftVisual {
     flightState: AircraftFlightState = {},
     controls: AircraftControls = {},
   ): void {
-    const delta = this.lastTime === null ? 0 : clamp(time - this.lastTime, 0, 0.1)
+    const delta = this.lastTime === null ? 0 : clamp(time - this.lastTime, 0, 0.25)
     this.lastTime = time
 
     const requestedThrottle = clamp(controls.throttle ?? flightState.throttle ?? 0, 0, 1)

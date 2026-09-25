@@ -1,6 +1,14 @@
 import * as THREE from 'three'
-import { FLIGHT } from './core/config'
-import { clamp } from './core/math'
+import {
+  FLIGHT,
+  TIME_OF_DAY_AUTO_CYCLE_SECONDS,
+  TIME_OF_DAY_PRESETS,
+  TIME_OF_DAY_TRANSITION_SECONDS,
+  mixTimeOfDayPreset,
+  type TimeOfDayName,
+  type TimeOfDayPreset,
+} from './core/config'
+import { clamp, smoothstep } from './core/math'
 import { AircraftVisual } from './entities/aircraft'
 import { createRenderer, type Quality } from './render/renderer'
 import { AudioSystem } from './systems/audio'
@@ -34,9 +42,17 @@ const cameraMode = (mode: HudCameraMode): CameraMode => {
   return CameraMode.Chase
 }
 
+const MAX_VISUAL_FRAME_TIME = 0.25
+
+const timeOfDayPreset = (name: TimeOfDayName): TimeOfDayPreset => {
+  const preset = TIME_OF_DAY_PRESETS.find((entry) => entry.name === name)
+  if (preset === undefined) throw new Error(`Missing time-of-day preset: ${name}`)
+  return preset
+}
+
 const locationName = (region: string, position: THREE.Vector3): string => {
   if (position.y > 390 || region === 'Open Sky') return 'Open Sky'
-  if (region === 'The Home Field') return 'Airfield Dusk'
+  if (region === 'The Home Field') return 'Airfield'
   if (region === 'Coastal Bluffs') return 'Amber Bay'
   if (region === 'Mountain Spine') return 'The High Pass'
   if (region === 'River Valley') return 'Lantern River'
@@ -124,6 +140,52 @@ async function bootstrap(): Promise<void> {
   let previousBoost = false
   let previousBrakes = false
   let takeoffRollPlayed = false
+  let suppressBoostForTimeChord = false
+  let timeOfDay: TimeOfDayName = 'dusk'
+  let timeTransitionFrom = timeOfDayPreset('dusk')
+  let timeTransitionTo = timeTransitionFrom
+  let timeTransitionElapsed = TIME_OF_DAY_TRANSITION_SECONDS
+  let autoTimeCycle = false
+  let autoTimeCycleElapsed = 0
+
+  const setAutoTimeCycle = (enabled: boolean): void => {
+    autoTimeCycle = enabled
+    autoTimeCycleElapsed = 0
+  }
+
+  const cycleTimeOfDay = (direction: -1 | 1): void => {
+    const transitionProgress = clamp(timeTransitionElapsed / TIME_OF_DAY_TRANSITION_SECONDS, 0, 1)
+    const currentPreset = mixTimeOfDayPreset(
+      timeTransitionFrom,
+      timeTransitionTo,
+      smoothstep(0, 1, transitionProgress),
+    )
+    const currentIndex = TIME_OF_DAY_PRESETS.findIndex((preset) => preset.name === timeOfDay)
+    const wrappedIndex = (currentIndex + direction + TIME_OF_DAY_PRESETS.length) % TIME_OF_DAY_PRESETS.length
+    const nextName = TIME_OF_DAY_PRESETS[wrappedIndex]?.name ?? 'dusk'
+    timeTransitionFrom = currentPreset
+    timeTransitionTo = timeOfDayPreset(nextName)
+    timeTransitionElapsed = 0
+    autoTimeCycleElapsed = 0
+    timeOfDay = nextName
+    hud.update({ timeOfDay })
+  }
+
+  const updateTimeOfDay = (delta: number): void => {
+    if (timeTransitionElapsed < TIME_OF_DAY_TRANSITION_SECONDS) {
+      timeTransitionElapsed = Math.min(TIME_OF_DAY_TRANSITION_SECONDS, timeTransitionElapsed + delta)
+      if (timeTransitionElapsed >= TIME_OF_DAY_TRANSITION_SECONDS) timeTransitionFrom = timeTransitionTo
+    } else if (autoTimeCycle) {
+      autoTimeCycleElapsed += delta
+      if (autoTimeCycleElapsed >= TIME_OF_DAY_AUTO_CYCLE_SECONDS) cycleTimeOfDay(1)
+    }
+    const amount = smoothstep(0, 1, clamp(timeTransitionElapsed / TIME_OF_DAY_TRANSITION_SECONDS, 0, 1))
+    const visual = mixTimeOfDayPreset(timeTransitionFrom, timeTransitionTo, amount)
+    sky.applyTimeOfDay(timeTransitionFrom, timeTransitionTo, amount)
+    world.applyTimeOfDay(timeTransitionFrom, timeTransitionTo, amount)
+    renderer.toneMappingExposure = visual.exposure
+    renderer.setClearColor(visual.backgroundColor, 1)
+  }
 
   const setPaused = (nextPaused: boolean): void => {
     if (recovering) return
@@ -145,8 +207,8 @@ async function bootstrap(): Promise<void> {
     previousBoost = false
     previousBrakes = false
     takeoffRollPlayed = false
-    aircraft.root.position.copy(flight.state.position)
-    aircraft.root.quaternion.copy(flight.state.orientation)
+    suppressBoostForTimeChord = false
+    flight.writeInterpolatedPose(aircraft.root.position, aircraft.root.quaternion, 1)
     cameraRig.reset(snapCamera)
     input.reset()
     transientMessage = null
@@ -182,7 +244,7 @@ async function bootstrap(): Promise<void> {
   const input = new InputManager({
     target: sceneRoot,
     keyboardTarget: window,
-    onAction: (action) => {
+    onAction: (action, event) => {
       if (action === 'mute') {
         audio.toggleMute()
         hud.update({ muted: audio.muted })
@@ -199,6 +261,9 @@ async function bootstrap(): Promise<void> {
         cycleCamera()
       } else if (action === 'flaps') {
         flaps = flaps > 0.5 ? 0 : 1
+      } else if (action === 'timeOfDay') {
+        if (event.shiftKey) suppressBoostForTimeChord = true
+        cycleTimeOfDay(event.shiftKey ? -1 : 1)
       }
     },
   })
@@ -227,13 +292,16 @@ async function bootstrap(): Promise<void> {
       audio.setMuted(muted)
       hud.update({ muted: audio.muted })
     },
+    onAutoTimeCycleChange: setAutoTimeCycle,
   })
   hud.update({
     region: 'The Home Field',
-    location: 'Airfield Dusk',
+    location: 'Airfield',
     cameraMode: cameraHudMode(cameraRig.mode),
     graphicsQuality: quality,
     muted: audio.muted,
+    timeOfDay,
+    autoTimeCycle,
      grounded: flight.state.grounded,
      heldKeys: input.getState().heldKeys,
      crashed: flight.state.crashed,
@@ -259,10 +327,10 @@ async function bootstrap(): Promise<void> {
   window.addEventListener('resize', resize)
   resize()
   applyQuality('high')
+  updateTimeOfDay(0)
 
-  aircraft.root.position.copy(flight.state.position)
-  aircraft.root.quaternion.copy(flight.state.orientation)
-  cameraRig.update(1, flight.state, true, {})
+  flight.writeInterpolatedPose(aircraft.root.position, aircraft.root.quaternion, 1)
+  cameraRig.update(1, aircraft.root, true, {})
   sky.update(camera, 0)
   world.update(0, camera.position)
   renderer.render(scene, camera)
@@ -286,44 +354,56 @@ async function bootstrap(): Promise<void> {
     yawActive: false,
     flaps: 0,
   }
+  const renderState = {
+    position: aircraft.root.position,
+    quaternion: aircraft.root.quaternion,
+    velocity: flight.velocity,
+    grounded: flight.state.grounded,
+  }
 
   const frame = (timestamp: number): void => {
     const now = timestamp * 0.001
-    const delta = clamp(now - previousTime, 0, FLIGHT.maxFrameTime)
+    const elapsed = Math.max(0, now - previousTime)
+    const delta = clamp(elapsed, 0, FLIGHT.maxFrameTime)
+    const visualDelta = clamp(elapsed, 0, MAX_VISUAL_FRAME_TIME)
     previousTime = now
     if (recovering && now >= recoveryEndsAt) resetFlight()
+    updateTimeOfDay(visualDelta)
     if (started && !paused && !recovering) {
-      const inputState = input.update(delta)
-      throttleLevel = advanceThrottle(throttleLevel, inputState.throttleDelta, delta, inputState.boost)
+      const inputState = input.update(visualDelta)
+      const shiftHeld = inputState.heldKeyCodes.some((code) => code === 'ShiftLeft' || code === 'ShiftRight')
+      if (suppressBoostForTimeChord && !shiftHeld) suppressBoostForTimeChord = false
+      const boost = inputState.boost && !suppressBoostForTimeChord
+      throttleLevel = advanceThrottle(throttleLevel, inputState.throttleDelta, visualDelta, boost)
       const throttleUp = inputState.throttleDelta > 0
       if (throttleUp && !previousThrottleUp) audio.throttleSurge()
-      if (inputState.boost && !previousBoost) audio.throttleSurge()
+      if (boost && !previousBoost) audio.throttleSurge()
       if (inputState.brakes > 0 && !previousBrakes && flight.state.grounded) audio.brake()
       previousThrottleUp = throttleUp
-      previousBoost = inputState.boost
+      previousBoost = boost
       previousBrakes = inputState.brakes > 0
 
-      activeControls.throttle = inputState.boost ? 1 : throttleLevel
+      activeControls.throttle = boost ? 1 : throttleLevel
       activeControls.throttleInput = inputState.throttleDelta
       activeControls.pitch = inputState.pitch
       activeControls.roll = inputState.roll
       activeControls.yaw = inputState.yaw
       activeControls.brakes = inputState.brakes
       activeControls.reverse = inputState.reverse > 0
-      activeControls.boost = inputState.boost
+      activeControls.boost = boost
       activeControls.pitchActive = Math.abs(inputState.pitch) > 0.01
       activeControls.rollActive = Math.abs(inputState.roll) > 0.01
       activeControls.yawActive = Math.abs(inputState.yaw) > 0.01
       activeControls.flaps = flaps
 
-      const forwardPower = throttleUp || inputState.boost
+      const forwardPower = throttleUp || boost
       if (!takeoffRollPlayed && flight.state.grounded && forwardPower && flight.state.groundSpeed > 1) {
         audio.takeoffRoll()
         takeoffRollPlayed = true
       }
 
       const event: FlightEvent | null = flight.step(delta, activeControls)
-      simulationTime += delta
+      simulationTime += visualDelta
       objectives.update(delta, flight.state, event)
 
       if (event !== null) {
@@ -371,16 +451,16 @@ async function bootstrap(): Promise<void> {
       })
     }
 
-    aircraft.root.position.copy(flight.state.position)
-    aircraft.root.quaternion.copy(flight.state.orientation)
+    flight.writeInterpolatedPose(aircraft.root.position, aircraft.root.quaternion)
     aircraft.setCockpitMode(cameraRig.mode === CameraMode.Cockpit)
-    aircraft.update(simulationTime, flight.state, activeControls)
+    aircraft.update(simulationTime, flight.state, flight.controlState)
     const orbitInput = input.consumeOrbitDelta()
-    cameraRig.update(delta, flight.state, flight.state.grounded, orbitInput)
+    renderState.grounded = flight.state.grounded
+    cameraRig.update(visualDelta, renderState, flight.state.grounded, orbitInput)
     sky.update(camera, simulationTime)
     world.update(simulationTime, camera.position)
 
-    hudAccumulator += delta
+    hudAccumulator += visualDelta
     if (hudAccumulator >= 0.08) {
       hudAccumulator = 0
       const region = world.getRegionAt(flight.state.position)
@@ -403,6 +483,8 @@ async function bootstrap(): Promise<void> {
          cameraMode: cameraHudMode(cameraRig.mode),
          graphicsQuality: quality,
          muted: audio.muted,
+         timeOfDay,
+         autoTimeCycle,
          grounded: flight.state.grounded,
          heldKeys: input.getState().heldKeys,
          crashed: flight.state.crashed,

@@ -1,8 +1,9 @@
+import type { TimeOfDayName } from '../core/config'
 import '../styles.css'
 
 export type CameraMode = 'chase' | 'nearChase' | 'cockpit' | 'orbit'
 export type GraphicsQuality = 'low' | 'high'
-export type HudAction = 'begin' | 'pause' | 'resume' | 'reset' | 'camera' | 'sound' | 'tools' | 'quality'
+export type HudAction = 'begin' | 'pause' | 'resume' | 'reset' | 'camera' | 'sound' | 'tools' | 'quality' | 'timeCycle'
 export type MessageTone = 'status' | 'warning' | 'danger'
 
 export interface AttitudeSnapshot {
@@ -89,6 +90,8 @@ export interface HudSnapshot {
   graphicsQuality?: GraphicsQuality | string
   quality?: GraphicsQuality | string
   muted?: boolean
+  timeOfDay?: TimeOfDayName
+  autoTimeCycle?: boolean
   grounded?: boolean
   heldKeys?: readonly string[]
   heldKeyCodes?: readonly string[]
@@ -127,6 +130,7 @@ export interface HudOptions {
   onCameraMode?: (mode: CameraMode) => void
   onQualityChange?: (quality: GraphicsQuality) => void
   onMuteToggle?: (muted: boolean) => void
+  onAutoTimeCycleChange?: (enabled: boolean) => void
 }
 
 interface HudElementRefs {
@@ -159,6 +163,8 @@ interface HudElementRefs {
   resetButton: HTMLButtonElement | null
   cameraMode: HTMLSelectElement | null
   quality: HTMLSelectElement | null
+  timeOfDay: HTMLElement | null
+  autoTimeCycle: HTMLSelectElement | null
   muteButton: HTMLButtonElement | null
   muteLabel: HTMLElement | null
   debugOverlay: HTMLElement | null
@@ -308,6 +314,7 @@ const makeShellMarkup = (title: string): string => `
       <div class="flight-header__location" aria-label="Current location">
         <span class="flight-header__location-label">CURRENT POSITION</span>
         <span class="flight-header__location-value" data-location>${DEFAULT_LOCATION}</span>
+        <span class="flight-header__time"><small>TIME</small><strong data-time-of-day aria-live="polite">DUSK</strong></span>
       </div>
       <div class="tools" data-ui>
         <button class="tools__toggle" id="tools-button" type="button" data-hud-action="tools" aria-label="Open flight tools" aria-expanded="false" aria-controls="tools-panel">
@@ -323,7 +330,8 @@ const makeShellMarkup = (title: string): string => `
           </div>
           <label class="tools-field" for="camera-mode"><span>Camera mode</span><select id="camera-mode" data-hud-control="camera-mode"><option value="chase">Chase</option><option value="nearChase">Near chase</option><option value="cockpit">Cockpit</option><option value="orbit">Orbit</option></select></label>
           <label class="tools-field" for="quality-select"><span>Graphics quality</span><select id="quality-select" data-hud-control="graphics-quality"><option value="low">Low</option><option value="high">High</option></select></label>
-          <p class="tools-panel__note">The atlas keeps its own time.</p>
+          <label class="tools-field" for="auto-time-cycle"><span>Time cycle</span><select id="auto-time-cycle" data-hud-control="auto-time-cycle"><option value="off">Off</option><option value="auto">Auto</option></select></label>
+          <p class="tools-panel__note">T moves forward. Shift + T moves back.</p>
         </section>
       </div>
     </header>
@@ -373,6 +381,7 @@ const makeShellMarkup = (title: string): string => `
         <span><kbd>C</kbd><small>View</small></span>
         <span><kbd>R</kbd><small>Reset</small></span>
         <span><kbd>P / Esc</kbd><small>Pause</small></span>
+        <span><kbd>T / Shift T</kbd><small>Time</small></span>
         <span><kbd>F</kbd><small>Flaps</small></span>
       </div>
       <button class="begin-card__button" id="begin-button" type="button" data-hud-action="begin">BEGIN FLIGHT <span aria-hidden="true">↗</span></button>
@@ -433,6 +442,7 @@ export class Hud {
     const select = element as HTMLSelectElement
     if (select.id === 'camera-mode') this.setCameraMode(select.value, 'control')
     if (select.id === 'quality-select') this.setGraphicsQuality(select.value, 'control')
+    if (select.id === 'auto-time-cycle') this.setAutoTimeCycle(select.value === 'auto', 'control')
     select.blur()
   }
 
@@ -510,6 +520,8 @@ export class Hud {
       resetButton: query<HTMLButtonElement>('#reset-button'),
       cameraMode: query<HTMLSelectElement>('#camera-mode'),
       quality: query<HTMLSelectElement>('#quality-select'),
+      timeOfDay: query<HTMLElement>('[data-time-of-day]'),
+      autoTimeCycle: query<HTMLSelectElement>('#auto-time-cycle'),
        muteButton: query<HTMLButtonElement>('#mute-button'),
        muteLabel: query<HTMLElement>('[data-mute-label]'),
        debugOverlay: query<HTMLElement>('[data-debug-overlay]'),
@@ -569,6 +581,8 @@ export class Hud {
     if (snapshot.cameraMode !== undefined) this.applyCameraMode(snapshot.cameraMode)
      if (snapshot.graphicsQuality !== undefined || snapshot.quality !== undefined) this.applyGraphicsQuality(snapshot.graphicsQuality ?? snapshot.quality ?? 'high')
      if (snapshot.muted !== undefined) this.setMuted(snapshot.muted)
+     if (snapshot.timeOfDay !== undefined) this.applyTimeOfDay(snapshot.timeOfDay)
+     if (snapshot.autoTimeCycle !== undefined) this.applyAutoTimeCycle(snapshot.autoTimeCycle)
      if (snapshot.grounded !== undefined || snapshot.heldKeys !== undefined || snapshot.heldKeyCodes !== undefined || snapshot.debugOverlay !== undefined) this.updateDebugOverlay(snapshot)
      if (snapshot.showIntro !== undefined) this.setIntroVisible(snapshot.showIntro)
 
@@ -646,6 +660,12 @@ export class Hud {
     this.emit('quality', { value: normalized, source })
   }
 
+  setAutoTimeCycle(enabled: boolean, source: HudActionDetail['source'] = 'api'): void {
+    const normalized = this.applyAutoTimeCycle(enabled)
+    this.options.onAutoTimeCycleChange?.(normalized)
+    this.emit('timeCycle', { value: normalized ? 'auto' : 'off', source })
+  }
+
   private applyCameraMode(mode: CameraMode | string): CameraMode {
     const normalized = normalizeCameraMode(mode)
     this.current.cameraMode = normalized
@@ -662,6 +682,18 @@ export class Hud {
     this.current.graphicsQuality = normalized
     const qualitySelect = this.refs?.quality
     if (qualitySelect !== null && qualitySelect !== undefined) qualitySelect.value = normalized
+    return normalized
+  }
+
+  private applyTimeOfDay(timeOfDay: TimeOfDayName): void {
+    this.current.timeOfDay = timeOfDay
+    if (this.refs?.timeOfDay != null) this.refs.timeOfDay.textContent = timeOfDay.toUpperCase()
+  }
+
+  private applyAutoTimeCycle(enabled: boolean): boolean {
+    const normalized = Boolean(enabled)
+    this.current.autoTimeCycle = normalized
+    if (this.refs?.autoTimeCycle != null) this.refs.autoTimeCycle.value = normalized ? 'auto' : 'off'
     return normalized
   }
 

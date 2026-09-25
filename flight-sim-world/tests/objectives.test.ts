@@ -35,6 +35,22 @@ describe('Objectives', () => {
     expect(objectives.snapshots[1]?.complete).toBe(true)
   })
 
+  it('tracks lighthouse progress at the fixed-step frame limit', () => {
+    const objectives = new Objectives()
+    const flight = new FlightModel().getState()
+    flight.grounded = false
+    flight.position.set(650, 100, 430)
+    objectives.update(0.25, flight, null)
+
+    for (let index = 1; index <= 151; index += 1) {
+      const angle = (index / 150) * Math.PI * 2
+      flight.position.set(650 + Math.cos(angle) * 150, 100, 430 + Math.sin(angle) * 150)
+      objectives.update(0.25, flight, null)
+    }
+
+    expect(objectives.snapshots[1]?.complete).toBe(true)
+  })
+
   it('does not count back-and-forth movement as a lighthouse circle', () => {
     const objectives = new Objectives()
     const flight = new FlightModel().getState()

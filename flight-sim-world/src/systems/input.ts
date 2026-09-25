@@ -1,4 +1,4 @@
-export type InputAction = 'camera' | 'reset' | 'flaps' | 'pause' | 'mute'
+export type InputAction = 'camera' | 'reset' | 'flaps' | 'pause' | 'mute' | 'timeOfDay'
 
 export type ContinuousInput =
   | 'pitch-up'
@@ -76,15 +76,16 @@ export const CONTROL_DEFINITIONS = [
   { action: 'Camera', keys: ['C'] },
   { action: 'Reset', keys: ['R'] },
   { action: 'Pause', keys: ['P / Esc'] },
+  { action: 'Time of day', keys: ['T', 'Shift + T'] },
   { action: 'Flaps', keys: ['F'] },
   { action: 'Orbit', keys: ['Drag', 'Wheel'] },
 ] as const
 
-const ACTION_VALUES: readonly InputAction[] = ['camera', 'reset', 'flaps', 'pause', 'mute']
+const ACTION_VALUES: readonly InputAction[] = ['camera', 'reset', 'flaps', 'pause', 'mute', 'timeOfDay']
 const MAX_MOUSE_PITCH = 0.35
 const MAX_MOUSE_ROLL = 0.6
-const MOUSE_PITCH_SENSITIVITY = 0.0009
-const MOUSE_ROLL_SENSITIVITY = 0.001
+const MOUSE_PITCH_SENSITIVITY = 0.00075
+const MOUSE_ROLL_SENSITIVITY = 0.00082
 const AIM_DECAY_RATE = 1.7
 
 const isInputAction = (value: ContinuousInput | InputAction): value is InputAction =>
@@ -114,6 +115,7 @@ const resolveCommand = (event: KeyboardEvent): ContinuousInput | InputAction | n
   if (keyMatches(event, 'KeyF', 'f')) return 'flaps'
   if (keyMatches(event, 'KeyP', 'p') || keyMatches(event, 'Escape', 'Escape')) return 'pause'
   if (keyMatches(event, 'KeyM', 'm')) return 'mute'
+  if (keyMatches(event, 'KeyT', 't')) return 'timeOfDay'
   return null
 }
 
@@ -160,7 +162,7 @@ const clamp01 = (value: number): number => Number.isFinite(value) ? Math.max(0, 
 
 export const advanceThrottle = (current: number, throttleDelta: number, delta: number, boost = false): number => {
   if (boost) return clamp01(current)
-  const safeDelta = Number.isFinite(delta) ? Math.max(0, Math.min(0.1, delta)) : 0
+  const safeDelta = Number.isFinite(delta) ? Math.max(0, Math.min(0.25, delta)) : 0
   return clamp01(clamp01(current) + clampUnit(throttleDelta) * safeDelta * 0.45)
 }
 
@@ -440,7 +442,7 @@ export class InputManager {
   }
 
   update(delta = 0): InputState {
-    const safeDelta = Math.max(0, Math.min(0.1, Number.isFinite(delta) ? delta : 0))
+    const safeDelta = Math.max(0, Math.min(0.25, Number.isFinite(delta) ? delta : 0))
     if (safeDelta > 0) {
       const decay = Math.exp(-AIM_DECAY_RATE * safeDelta)
       this.aimPitch *= decay

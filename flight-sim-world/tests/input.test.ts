@@ -27,11 +27,12 @@ class EventTargetDouble {
   }
 }
 
-const keyEvent = (code: string, key: string): KeyboardEvent => ({
+const keyEvent = (code: string, key: string, shiftKey = false, repeat = false): KeyboardEvent => ({
   code,
   key,
   target: null,
-  repeat: false,
+  shiftKey,
+  repeat,
   preventDefault: () => undefined,
 } as unknown as KeyboardEvent)
 
@@ -46,8 +47,8 @@ const pointerEvent = (type: string, clientX: number, clientY: number, button = 0
   preventDefault: () => undefined,
 } as unknown as PointerEvent)
 
-const press = (target: EventTargetDouble, code: string, key: string): void => {
-  target.emit('keydown', keyEvent(code, key))
+const press = (target: EventTargetDouble, code: string, key: string, shiftKey = false, repeat = false): void => {
+  target.emit('keydown', keyEvent(code, key, shiftKey, repeat))
 }
 
 const release = (target: EventTargetDouble, code: string, key: string): void => {
@@ -162,6 +163,23 @@ describe('InputManager flight mappings', () => {
     press(target, 'KeyM', 'm')
     expect(onMute).toHaveBeenCalledOnce()
     expect(input.consumeActions()).toContain('mute')
+    input.dispose()
+  })
+
+  it('dispatches one time action per T press and preserves Shift direction', () => {
+    const target = new EventTargetDouble()
+    const onAction = vi.fn()
+    const input = new InputManager(target, { keyboardTarget: target, onAction })
+
+    press(target, 'KeyT', 't')
+    press(target, 'KeyT', 't', false, true)
+    expect(onAction).toHaveBeenCalledOnce()
+    expect(onAction.mock.calls[0]?.[1].shiftKey).toBe(false)
+    release(target, 'KeyT', 't')
+
+    press(target, 'KeyT', 'T', true)
+    expect(onAction).toHaveBeenCalledTimes(2)
+    expect(onAction.mock.calls[1]?.[1].shiftKey).toBe(true)
     input.dispose()
   })
 })

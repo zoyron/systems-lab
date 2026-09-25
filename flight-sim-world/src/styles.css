@@ -292,6 +292,30 @@ select:focus-visible {
   white-space: nowrap;
 }
 
+.flight-header__time {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+  margin-top: 1px;
+  font-family: var(--windward-mono);
+  text-transform: uppercase;
+}
+
+.flight-header__time small {
+  color: var(--windward-muted);
+  font-size: 6px;
+  letter-spacing: 0.14em;
+  opacity: 0.68;
+}
+
+.flight-header__time strong {
+  color: var(--windward-cream);
+  font-size: 8px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  line-height: 1.3;
+}
+
 .tools {
   position: relative;
   justify-self: end;

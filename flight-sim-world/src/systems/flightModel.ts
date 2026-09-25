@@ -1,6 +1,7 @@
 import { Quaternion, Vector3 } from 'three'
 import { FLIGHT, WORLD } from '../core/config'
 import { getSurfaceHeight, isRunwayPoint, isWaterAt } from '../core/heightfield'
+import { damp } from '../core/math'
 
 const GRAVITY = 9.81
 const STALL_ANGLE = 0.3
@@ -16,8 +17,12 @@ const LANDING_CONFIRMATION_TIME = 0.14
 const MAX_BANK = 55 * Math.PI / 180
 const MAX_PITCH = 24 * Math.PI / 180
 const CRUISE_PITCH = 3.5 * Math.PI / 180
-const ROLL_RESPONSE = 2.1
-const PITCH_RESPONSE = 1.75
+const CONTROL_RESPONSE = 7.5
+const ROLL_ACTIVE_FREQUENCY = 8.5
+const ROLL_AUTO_FREQUENCY = 4.35
+const PITCH_ACTIVE_FREQUENCY = 7.2
+const PITCH_AUTO_FREQUENCY = 3.8
+const SPRING_DAMPING_RATIO = 0.92
 const MAX_ROLL_RATE = 1.3
 const MAX_PITCH_RATE = 0.42
 const GROUND_FORWARD_SPEED = 44
@@ -144,6 +149,10 @@ export class FlightModel {
 
   public readonly state: FlightState
 
+  private readonly previousPosition: Vector3
+
+  private readonly previousOrientation: Quaternion
+
   private readonly initialPosition: Vector3
 
   private readonly initialOrientation: Quaternion
@@ -191,6 +200,25 @@ export class FlightModel {
   private crashEventPending = false
 
   private crashReason: FlightEventReason = 'terrain'
+  private filteredPitch = 0
+  private filteredRoll = 0
+  private filteredYaw = 0
+  private pitchAngularVelocity = 0
+  private rollAngularVelocity = 0
+  private readonly filteredControls: NormalizedControls = {
+    throttle: 0,
+    throttleInput: 0,
+    pitch: 0,
+    roll: 0,
+    yaw: 0,
+    brakes: 0,
+    reverse: 0,
+    boost: false,
+    pitchActive: false,
+    rollActive: false,
+    yawActive: false,
+    flaps: 0,
+  }
 
   constructor(position?: Vector3, orientation?: Quaternion) {
     this.initialPosition = (position ?? defaultPosition()).clone()
@@ -198,6 +226,8 @@ export class FlightModel {
     this.position = this.initialPosition.clone()
     this.velocity = new Vector3()
     this.orientation = this.initialOrientation.clone()
+    this.previousPosition = this.position.clone()
+    this.previousOrientation = this.orientation.clone()
     this.state = {
       position: this.position,
       velocity: this.velocity,
@@ -271,6 +301,23 @@ export class FlightModel {
     return this.state.stalled
   }
 
+  get controlState(): FlightControls {
+    return {
+      throttle: this.state.throttle,
+      throttleInput: 0,
+      pitch: this.filteredPitch,
+      roll: this.filteredRoll,
+      yaw: this.filteredYaw,
+      brakes: this.state.brakes,
+      reverse: false,
+      boost: this.state.throttle >= 1,
+      pitchActive: Math.abs(this.filteredPitch) > 0.01,
+      rollActive: Math.abs(this.filteredRoll) > 0.01,
+      yawActive: Math.abs(this.filteredYaw) > 0.01,
+      flaps: this.state.flaps,
+    }
+  }
+
   get isCrashed(): boolean {
     return this.state.crashed
   }
@@ -288,18 +335,36 @@ export class FlightModel {
     this.crashedState = false
     this.crashEventPending = false
     this.crashReason = 'terrain'
+    this.filteredPitch = 0
+    this.filteredRoll = 0
+    this.filteredYaw = 0
+    this.pitchAngularVelocity = 0
+    this.rollAngularVelocity = 0
     this.state.throttle = 0
     this.state.brakes = 0
     this.state.flaps = 0
     this.state.crashed = false
     this.updateState()
+    this.previousPosition.copy(this.position)
+    this.previousOrientation.copy(this.orientation)
+  }
+
+  get renderInterpolationAlpha(): number {
+    return clamp(this.accumulator / FLIGHT.fixedStep, 0, 1)
+  }
+
+  writeInterpolatedPose(
+    targetPosition: Vector3,
+    targetOrientation: Quaternion,
+    amount = this.renderInterpolationAlpha,
+  ): void {
+    const alpha = clamp(finiteOrZero(amount), 0, 1)
+    targetPosition.lerpVectors(this.previousPosition, this.position, alpha)
+    targetOrientation.slerpQuaternions(this.previousOrientation, this.orientation, alpha).normalize()
   }
 
   step(dt: number, controls: FlightControls = {}): FlightEvent | null {
     const normalizedControls = this.normalizeControls(controls)
-    this.state.throttle = normalizedControls.throttle
-    this.state.brakes = normalizedControls.brakes
-    this.state.flaps = normalizedControls.flaps
 
     if (this.crashedState) {
       this.updateState()
@@ -307,6 +372,10 @@ export class FlightModel {
       this.crashEventPending = false
       return this.makeEvent('crash', this.crashReason, this.state.airspeed)
     }
+
+    this.state.throttle = normalizedControls.throttle
+    this.state.brakes = normalizedControls.brakes
+    this.state.flaps = normalizedControls.flaps
 
     if (!Number.isFinite(dt) || dt <= 0) {
       this.updateState()
@@ -353,7 +422,10 @@ export class FlightModel {
     }
   }
 
-  private integrate(dt: number, controls: NormalizedControls): FlightEvent | null {
+  private integrate(dt: number, targetControls: NormalizedControls): FlightEvent | null {
+    this.previousPosition.copy(this.position)
+    this.previousOrientation.copy(this.orientation)
+    const controls = this.updateControlTargets(dt, targetControls)
     this.updateAxes()
     const groundHeight = getSurfaceHeight(this.position.x, this.position.z)
     const contactHeight = groundHeight + FLIGHT.wheelHeight
@@ -366,6 +438,40 @@ export class FlightModel {
     return this.integrateAir(dt, controls)
   }
 
+  private updateControlTargets(dt: number, target: NormalizedControls): NormalizedControls {
+    this.filteredPitch = damp(this.filteredPitch, target.pitch, CONTROL_RESPONSE, dt)
+    this.filteredRoll = damp(this.filteredRoll, target.roll, CONTROL_RESPONSE, dt)
+    this.filteredYaw = damp(this.filteredYaw, target.yaw, CONTROL_RESPONSE, dt)
+    const controls = this.filteredControls
+    controls.throttle = target.throttle
+    controls.throttleInput = target.throttleInput
+    controls.pitch = this.filteredPitch
+    controls.roll = this.filteredRoll
+    controls.yaw = this.filteredYaw
+    controls.brakes = target.brakes
+    controls.reverse = target.reverse
+    controls.boost = target.boost
+    controls.pitchActive = target.pitchActive
+    controls.rollActive = target.rollActive
+    controls.yawActive = target.yawActive
+    controls.flaps = target.flaps
+    return controls
+  }
+
+  private updateAngularSpring(
+    current: number,
+    target: number,
+    velocity: number,
+    frequency: number,
+    dt: number,
+    maximumRate: number,
+  ): number {
+    const stiffness = frequency * frequency
+    const damping = 2 * SPRING_DAMPING_RATIO * frequency
+    const acceleration = (target - current) * stiffness - velocity * damping
+    return clamp(velocity + acceleration * dt, -maximumRate, maximumRate)
+  }
+
   private integrateGround(dt: number, controls: NormalizedControls): FlightEvent | null {
     const incomingVerticalSpeed = Math.max(0, -this.velocity.y)
     if (incomingVerticalSpeed > 0.05) {
@@ -375,6 +481,8 @@ export class FlightModel {
 
     this.grounded = true
     this.velocity.y = 0
+    this.pitchAngularVelocity = 0
+    this.rollAngularVelocity = 0
     this.updateAxes()
 
     const groundSpeed = Math.hypot(this.velocity.x, this.velocity.z)
@@ -444,6 +552,8 @@ export class FlightModel {
     if (canTakeoff) {
       this.grounded = false
       this.landingPending = false
+      this.pitchAngularVelocity = 0
+      this.rollAngularVelocity = 0
       this.position.y = surfaceHeight + FLIGHT.wheelHeight + 0.03
       this.rotateLocal(LOCAL_X, 0.1)
       this.velocity.y = Math.max(0.8, currentForwardSpeed * 0.018)
@@ -462,16 +572,28 @@ export class FlightModel {
 
     const currentRoll = this.currentRollAngle()
     const targetBank = clamp(controls.roll * MAX_BANK, -MAX_BANK, MAX_BANK)
-    const rollResponse = controls.rollActive ? ROLL_RESPONSE + 0.35 : ROLL_RESPONSE
-    const rollRate = clamp((targetBank - currentRoll) * rollResponse, -MAX_ROLL_RATE, MAX_ROLL_RATE)
-    this.rotateLocal(LOCAL_Z, -rollRate * dt)
+    this.rollAngularVelocity = this.updateAngularSpring(
+      currentRoll,
+      targetBank,
+      this.rollAngularVelocity,
+      controls.rollActive ? ROLL_ACTIVE_FREQUENCY : ROLL_AUTO_FREQUENCY,
+      dt,
+      MAX_ROLL_RATE,
+    )
+    this.rotateLocal(LOCAL_Z, -this.rollAngularVelocity * dt)
     this.updateAxes()
 
     const currentPitch = this.currentPitch()
     const targetPitch = clamp(CRUISE_PITCH + controls.pitch * MAX_PITCH, -MAX_PITCH, MAX_PITCH + CRUISE_PITCH)
-    const pitchResponse = controls.pitchActive ? PITCH_RESPONSE + 0.25 : PITCH_RESPONSE
-    const pitchRate = clamp((targetPitch - currentPitch) * pitchResponse, -MAX_PITCH_RATE, MAX_PITCH_RATE)
-    this.rotateLocal(LOCAL_X, pitchRate * dt)
+    this.pitchAngularVelocity = this.updateAngularSpring(
+      currentPitch,
+      targetPitch,
+      this.pitchAngularVelocity,
+      controls.pitchActive ? PITCH_ACTIVE_FREQUENCY : PITCH_AUTO_FREQUENCY,
+      dt,
+      MAX_PITCH_RATE,
+    )
+    this.rotateLocal(LOCAL_X, this.pitchAngularVelocity * dt)
     this.updateAxes()
 
     const airspeedBeforeControl = Math.max(0.1, this.velocity.length())
@@ -540,6 +662,8 @@ export class FlightModel {
   }
 
   private resolveTouchdown(impactSpeed: number): FlightEvent | null {
+    this.pitchAngularVelocity = 0
+    this.rollAngularVelocity = 0
     this.updateTerrainNormal()
     const groundSpeed = Math.hypot(this.velocity.x, this.velocity.z)
     const onRunway = isRunwayPoint(this.position.x, this.position.z)
@@ -663,10 +787,20 @@ export class FlightModel {
     this.landingPending = false
     this.stalledState = false
     this.aoaState = 0
+    this.filteredPitch = 0
+    this.filteredRoll = 0
+    this.filteredYaw = 0
+    this.pitchAngularVelocity = 0
+    this.rollAngularVelocity = 0
+    this.state.throttle = 0
+    this.state.brakes = 0
+    this.state.flaps = 0
     this.crashedState = true
     this.crashEventPending = true
     this.crashReason = reason
     this.updateState()
+    this.previousPosition.copy(this.position)
+    this.previousOrientation.copy(this.orientation)
     return event
   }
 
