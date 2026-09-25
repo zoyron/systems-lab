@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { LANDMARKS, WORLD } from '../core/config'
+import { LANDMARKS, mixHexColor, WORLD } from '../core/config'
 import type { LandmarkDefinition, TimeOfDayPreset } from '../core/config'
 import {
   distanceToRiver,
@@ -244,7 +244,7 @@ export class World {
   applyTimeOfDay(from: TimeOfDayPreset, to: TimeOfDayPreset, amount: number): void {
     const mix = (start: number, end: number): number => lerp(start, end, amount)
     const setColor = (color: THREE.Color, start: number, end: number): void => {
-      color.setHex(Math.round(mix(start, end)))
+      color.setHex(mixHexColor(start, end, amount))
     }
     const setPosition = (
       target: THREE.Vector3,

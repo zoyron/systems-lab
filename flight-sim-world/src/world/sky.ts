@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import type { TimeOfDayPreset } from '../core/config'
+import { mixHexColor, type TimeOfDayPreset } from '../core/config'
 import { lerp, seededRandom } from '../core/math'
 
 const SKY_RADIUS = 9000
@@ -180,7 +180,7 @@ export class Sky {
   applyTimeOfDay(from: TimeOfDayPreset, to: TimeOfDayPreset, amount: number): void {
     const mix = (start: number, end: number): number => lerp(start, end, amount)
     const setColor = (color: THREE.Color, start: number, end: number): void => {
-      color.setHex(Math.round(mix(start, end)))
+      color.setHex(mixHexColor(start, end, amount))
     }
     const setPosition = (
       target: THREE.Vector3,

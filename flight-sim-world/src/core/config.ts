@@ -242,10 +242,46 @@ export const TIME_OF_DAY_PRESETS: readonly TimeOfDayPreset[] = [
 export const TIME_OF_DAY_TRANSITION_SECONDS = 1.5
 export const TIME_OF_DAY_AUTO_CYCLE_SECONDS = 14
 
-const blendTimeValue = (from: unknown, to: unknown, amount: number): unknown => {
-  if (typeof from === 'number' && typeof to === 'number') return lerp(from, to, amount)
+const TIME_OF_DAY_COLOR_KEYS = new Set([
+  'skyZenith',
+  'skyUpper',
+  'skyHorizon',
+  'skyLower',
+  'fogColor',
+  'backgroundColor',
+  'waterDeep',
+  'waterShallow',
+  'hemisphereSky',
+  'hemisphereGround',
+  'keyColor',
+  'fillColor',
+  'glowColor',
+  'cloudColor',
+  'worldCloudColor',
+  'moonColor',
+  'moonGlowColor',
+  'sunColor',
+])
+
+export const mixHexColor = (from: number, to: number, amount: number): number => {
+  const fromRed = (from >>> 16) & 0xff
+  const fromGreen = (from >>> 8) & 0xff
+  const fromBlue = from & 0xff
+  const toRed = (to >>> 16) & 0xff
+  const toGreen = (to >>> 8) & 0xff
+  const toBlue = to & 0xff
+  const red = Math.round(lerp(fromRed, toRed, amount))
+  const green = Math.round(lerp(fromGreen, toGreen, amount))
+  const blue = Math.round(lerp(fromBlue, toBlue, amount))
+  return red * 0x10000 + green * 0x100 + blue
+}
+
+const blendTimeValue = (from: unknown, to: unknown, amount: number, isColor: boolean): unknown => {
+  if (typeof from === 'number' && typeof to === 'number') {
+    return isColor ? mixHexColor(from, to, amount) : lerp(from, to, amount)
+  }
   if (Array.isArray(from) && Array.isArray(to)) {
-    return from.map((value, index) => blendTimeValue(value, to[index], amount))
+    return from.map((value, index) => blendTimeValue(value, to[index], amount, false))
   }
   return to
 }
@@ -258,7 +294,7 @@ export const mixTimeOfDayPreset = (
   const fromValues = from as unknown as Record<string, unknown>
   const result: Record<string, unknown> = {}
   for (const [key, toValue] of Object.entries(to)) {
-    result[key] = blendTimeValue(fromValues[key], toValue, amount)
+    result[key] = blendTimeValue(fromValues[key], toValue, amount, TIME_OF_DAY_COLOR_KEYS.has(key))
   }
   return result as unknown as TimeOfDayPreset
 }
