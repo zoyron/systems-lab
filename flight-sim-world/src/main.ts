@@ -13,8 +13,19 @@ import { AircraftVisual } from './entities/aircraft'
 import { createRenderer, type Quality } from './render/renderer'
 import { AudioSystem } from './systems/audio'
 import { CameraMode, CameraRig } from './systems/cameraRig'
-import { FlightModel, type FlightControls, type FlightEvent } from './systems/flightModel'
-import { advanceThrottle, InputManager } from './systems/input'
+import {
+  FlightModel,
+  type FlightControls,
+  type FlightEvent,
+  type ResolvedFlightControls,
+} from './systems/flightModel'
+import {
+  advanceThrottle,
+  InputManager,
+  isEditableTarget,
+  type MutableInputState,
+  type OrbitDelta,
+} from './systems/input'
 import { Objectives } from './systems/objectives'
 import { Hud, type CameraMode as HudCameraMode, type MessageTone } from './ui/hud'
 import { Sky } from './world/sky'
@@ -145,6 +156,7 @@ async function bootstrap(): Promise<void> {
   let timeTransitionFrom = timeOfDayPreset('dusk')
   let timeTransitionTo = timeTransitionFrom
   let timeTransitionElapsed = TIME_OF_DAY_TRANSITION_SECONDS
+  let timeOfDayDirty = true
   let autoTimeCycle = false
   let autoTimeCycleElapsed = 0
 
@@ -166,6 +178,7 @@ async function bootstrap(): Promise<void> {
     timeTransitionFrom = currentPreset
     timeTransitionTo = timeOfDayPreset(nextName)
     timeTransitionElapsed = 0
+    timeOfDayDirty = true
     autoTimeCycleElapsed = 0
     timeOfDay = nextName
     hud.update({ timeOfDay })
@@ -174,17 +187,20 @@ async function bootstrap(): Promise<void> {
   const updateTimeOfDay = (delta: number): void => {
     if (timeTransitionElapsed < TIME_OF_DAY_TRANSITION_SECONDS) {
       timeTransitionElapsed = Math.min(TIME_OF_DAY_TRANSITION_SECONDS, timeTransitionElapsed + delta)
+      timeOfDayDirty = true
       if (timeTransitionElapsed >= TIME_OF_DAY_TRANSITION_SECONDS) timeTransitionFrom = timeTransitionTo
     } else if (autoTimeCycle) {
       autoTimeCycleElapsed += delta
       if (autoTimeCycleElapsed >= TIME_OF_DAY_AUTO_CYCLE_SECONDS) cycleTimeOfDay(1)
     }
+    if (!timeOfDayDirty) return
     const amount = smoothstep(0, 1, clamp(timeTransitionElapsed / TIME_OF_DAY_TRANSITION_SECONDS, 0, 1))
     const visual = mixTimeOfDayPreset(timeTransitionFrom, timeTransitionTo, amount)
     sky.applyTimeOfDay(timeTransitionFrom, timeTransitionTo, amount)
     world.applyTimeOfDay(timeTransitionFrom, timeTransitionTo, amount)
     renderer.toneMappingExposure = visual.exposure
     renderer.setClearColor(visual.backgroundColor, 1)
+    timeOfDayDirty = false
   }
 
   const setPaused = (nextPaused: boolean): void => {
@@ -269,15 +285,18 @@ async function bootstrap(): Promise<void> {
   })
   input.setEnabled(false)
 
+  const startFlight = (): void => {
+    if (started) return
+    started = true
+    paused = false
+    input.setEnabled(true)
+    void audio.unlock()
+    hud.update({ paused: false, showIntro: false })
+  }
+
   const hud = new Hud(uiRoot, {
     title: 'Windward',
-    onBegin: () => {
-      started = true
-      paused = false
-      input.setEnabled(true)
-      void audio.unlock()
-      hud.update({ paused: false, showIntro: false })
-    },
+    onBegin: startFlight,
     onPause: (nextPaused) => {
       if (!recovering) setPaused(nextPaused)
     },
@@ -294,6 +313,14 @@ async function bootstrap(): Promise<void> {
     },
     onAutoTimeCycleChange: setAutoTimeCycle,
   })
+  const onBeginKeyDown = (event: KeyboardEvent): void => {
+    const target = event.target instanceof Element ? event.target : null
+    const uiControl = target?.closest('button, input, select, textarea, a, [role="button"], [data-ui]') ?? null
+    if (event.defaultPrevented || event.repeat || started || recovering || event.key !== 'Enter' || isEditableTarget(target) || uiControl !== null) return
+    event.preventDefault()
+    hud.begin()
+  }
+  window.addEventListener('keydown', onBeginKeyDown)
   hud.update({
     region: 'The Home Field',
     location: 'Airfield',
@@ -340,6 +367,25 @@ async function bootstrap(): Promise<void> {
   let hudAccumulator = 1
   let animationFrame = 0
   const projected = new THREE.Vector3()
+  const inputState: MutableInputState = {
+    pitch: 0,
+    roll: 0,
+    yaw: 0,
+    throttle: 0,
+    throttleDelta: 0,
+    throttleAxis: 0,
+    boost: false,
+    reverse: 0,
+    brakes: 0,
+    brake: false,
+    mousePitch: 0,
+    mouseRoll: 0,
+    aim: { pitch: 0, roll: 0 },
+    heldKeys: [],
+    heldKeyCodes: [],
+    orbitDelta: { x: 0, y: 0, zoom: 0 },
+  }
+  const orbitDelta: OrbitDelta = { x: 0, y: 0, zoom: 0 }
   const activeControls: FlightControls = {
     throttle: 0,
     throttleInput: 0,
@@ -347,6 +393,20 @@ async function bootstrap(): Promise<void> {
     roll: 0,
     yaw: 0,
     brakes: false,
+    reverse: false,
+    boost: false,
+    pitchActive: false,
+    rollActive: false,
+    yawActive: false,
+    flaps: 0,
+  }
+  const visualControls: ResolvedFlightControls = {
+    throttle: 0,
+    throttleInput: 0,
+    pitch: 0,
+    roll: 0,
+    yaw: 0,
+    brakes: 0,
     reverse: false,
     boost: false,
     pitchActive: false,
@@ -369,9 +429,9 @@ async function bootstrap(): Promise<void> {
     previousTime = now
     if (recovering && now >= recoveryEndsAt) resetFlight()
     updateTimeOfDay(visualDelta)
+    input.updateInto(visualDelta, inputState)
     if (started && !paused && !recovering) {
-      const inputState = input.update(visualDelta)
-      const shiftHeld = inputState.heldKeyCodes.some((code) => code === 'ShiftLeft' || code === 'ShiftRight')
+      const shiftHeld = inputState.heldKeyCodes.includes('ShiftLeft') || inputState.heldKeyCodes.includes('ShiftRight')
       if (suppressBoostForTimeChord && !shiftHeld) suppressBoostForTimeChord = false
       const boost = inputState.boost && !suppressBoostForTimeChord
       throttleLevel = advanceThrottle(throttleLevel, inputState.throttleDelta, visualDelta, boost)
@@ -453,10 +513,10 @@ async function bootstrap(): Promise<void> {
 
     flight.writeInterpolatedPose(aircraft.root.position, aircraft.root.quaternion)
     aircraft.setCockpitMode(cameraRig.mode === CameraMode.Cockpit)
-    aircraft.update(simulationTime, flight.state, flight.controlState)
-    const orbitInput = input.consumeOrbitDelta()
+    aircraft.update(simulationTime, flight.state, flight.writeControlState(visualControls))
+    input.consumeOrbitDeltaInto(orbitDelta)
     renderState.grounded = flight.state.grounded
-    cameraRig.update(visualDelta, renderState, flight.state.grounded, orbitInput)
+    cameraRig.update(visualDelta, renderState, flight.state.grounded, orbitDelta)
     sky.update(camera, simulationTime)
     world.update(simulationTime, camera.position)
 
@@ -486,7 +546,7 @@ async function bootstrap(): Promise<void> {
          timeOfDay,
          autoTimeCycle,
          grounded: flight.state.grounded,
-         heldKeys: input.getState().heldKeys,
+         heldKeys: inputState.heldKeys,
          crashed: flight.state.crashed,
          showIntro: !started,
 
@@ -496,7 +556,7 @@ async function bootstrap(): Promise<void> {
       })
     }
 
-    input.consumeActions()
+    input.clearActions()
     renderer.render(scene, camera)
     animationFrame = window.requestAnimationFrame(frame)
   }
@@ -519,6 +579,7 @@ async function bootstrap(): Promise<void> {
     sky.dispose()
     renderer.dispose()
     window.removeEventListener('resize', resize)
+    window.removeEventListener('keydown', onBeginKeyDown)
   }, { once: true })
 }
 

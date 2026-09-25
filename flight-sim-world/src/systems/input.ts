@@ -48,6 +48,11 @@ export interface InputState {
   orbitDelta: OrbitDelta
 }
 
+export interface MutableInputState extends InputState {
+  heldKeys: string[]
+  heldKeyCodes: string[]
+}
+
 export type InputControls = InputState
 
 export type InputActionHandler = (event: KeyboardEvent) => void
@@ -451,36 +456,35 @@ export class InputManager {
     return this.getState()
   }
 
-  getState(): InputState {
-    const keyboardPitch = this.axis('pitch-up', 'pitch-down')
-    const keyboardRoll = this.axis('roll-right', 'roll-left')
-    const keyboardYaw = this.axis('yaw-right', 'yaw-left')
-    const mousePitch = clampUnit(this.aimPitch / MAX_MOUSE_PITCH)
-    const mouseRoll = clampUnit(this.aimRoll / MAX_MOUSE_ROLL)
-    const pitch = clampUnit(keyboardPitch + mousePitch)
-    const roll = clampUnit(keyboardRoll + mouseRoll)
-    const throttleAxis = this.axis('throttle-up', 'throttle-down')
-    const boost = this.isCommandActive('boost')
-    const throttle = boost ? 1 : throttleAxis
-    const brakes = this.isCommandActive('brakes') ? 1 : 0
-    return {
-      pitch,
-      roll,
-      yaw: keyboardYaw,
-      throttle,
-      throttleDelta: throttleAxis,
-      throttleAxis,
-      boost,
-      reverse: throttleAxis < 0 ? 1 : 0,
-      brakes,
-      brake: brakes > 0,
-      mousePitch,
-      mouseRoll,
-      aim: { pitch: this.aimPitch, roll: this.aimRoll },
-      heldKeys: [...this.heldKeyLabels.keys()],
-      heldKeyCodes: [...this.heldKeys],
-      orbitDelta: this.getOrbitDelta(),
+  updateInto(delta: number, target: MutableInputState): InputState {
+    const safeDelta = Math.max(0, Math.min(0.25, Number.isFinite(delta) ? delta : 0))
+    if (safeDelta > 0) {
+      const decay = Math.exp(-AIM_DECAY_RATE * safeDelta)
+      this.aimPitch *= decay
+      this.aimRoll *= decay
     }
+    return this.writeState(target)
+  }
+
+  getState(): InputState {
+    return this.writeState({
+      pitch: 0,
+      roll: 0,
+      yaw: 0,
+      throttle: 0,
+      throttleDelta: 0,
+      throttleAxis: 0,
+      boost: false,
+      reverse: 0,
+      brakes: 0,
+      brake: false,
+      mousePitch: 0,
+      mouseRoll: 0,
+      aim: { pitch: 0, roll: 0 },
+      heldKeys: [],
+      heldKeyCodes: [],
+      orbitDelta: { x: 0, y: 0, zoom: 0 },
+    })
   }
 
   getControls(): InputState {
@@ -497,9 +501,17 @@ export class InputManager {
   }
 
   consumeOrbitDelta(): OrbitDelta {
-    const delta = this.getOrbitDelta()
-    this.orbitValue = { x: 0, y: 0, zoom: 0 }
-    return delta
+    return this.consumeOrbitDeltaInto({ x: 0, y: 0, zoom: 0 })
+  }
+
+  consumeOrbitDeltaInto(target: OrbitDelta): OrbitDelta {
+    target.x = this.orbitValue.x
+    target.y = this.orbitValue.y
+    target.zoom = this.orbitValue.zoom
+    this.orbitValue.x = 0
+    this.orbitValue.y = 0
+    this.orbitValue.zoom = 0
+    return target
   }
 
   consumeOrbit(): OrbitDelta {
@@ -527,6 +539,10 @@ export class InputManager {
     return actions
   }
 
+  clearActions(): void {
+    this.actionQueue.length = 0
+  }
+
   drainActions(): InputAction[] {
     return this.consumeActions()
   }
@@ -548,8 +564,10 @@ export class InputManager {
 
   reset(): void {
     this.clearHeldInput()
-    this.actionQueue = []
-    this.orbitValue = { x: 0, y: 0, zoom: 0 }
+    this.actionQueue.length = 0
+    this.orbitValue.x = 0
+    this.orbitValue.y = 0
+    this.orbitValue.zoom = 0
   }
 
   clear(): void {
@@ -563,6 +581,39 @@ export class InputManager {
 
   dispose(): void {
     this.destroy()
+  }
+
+  private writeState(target: MutableInputState): InputState {
+    const keyboardPitch = this.axis('pitch-up', 'pitch-down')
+    const keyboardRoll = this.axis('roll-right', 'roll-left')
+    const keyboardYaw = this.axis('yaw-right', 'yaw-left')
+    const mousePitch = clampUnit(this.aimPitch / MAX_MOUSE_PITCH)
+    const mouseRoll = clampUnit(this.aimRoll / MAX_MOUSE_ROLL)
+    const throttleAxis = this.axis('throttle-up', 'throttle-down')
+    const boost = this.isCommandActive('boost')
+    const brakes = this.isCommandActive('brakes') ? 1 : 0
+    target.pitch = clampUnit(keyboardPitch + mousePitch)
+    target.roll = clampUnit(keyboardRoll + mouseRoll)
+    target.yaw = keyboardYaw
+    target.throttle = boost ? 1 : throttleAxis
+    target.throttleDelta = throttleAxis
+    target.throttleAxis = throttleAxis
+    target.boost = boost
+    target.reverse = throttleAxis < 0 ? 1 : 0
+    target.brakes = brakes
+    target.brake = brakes > 0
+    target.mousePitch = mousePitch
+    target.mouseRoll = mouseRoll
+    target.aim.pitch = this.aimPitch
+    target.aim.roll = this.aimRoll
+    target.heldKeys.length = 0
+    target.heldKeyCodes.length = 0
+    for (const key of this.heldKeyLabels.keys()) target.heldKeys.push(key)
+    for (const key of this.heldKeys) target.heldKeyCodes.push(key)
+    target.orbitDelta.x = this.orbitValue.x
+    target.orbitDelta.y = this.orbitValue.y
+    target.orbitDelta.zoom = this.orbitValue.zoom
+    return target
   }
 
   private axis(positive: ContinuousInput, negative: ContinuousInput): number {

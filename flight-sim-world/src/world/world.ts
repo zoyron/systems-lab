@@ -631,6 +631,19 @@ export class World {
       position.setY(index, WORLD.waterLevel + 0.04)
     }
     geometry.setAttribute('waterMask', new THREE.BufferAttribute(masks, 1))
+    const index = geometry.getIndex()
+    if (index !== null) {
+      const visibleIndices: number[] = []
+      for (let offset = 0; offset < index.count; offset += 3) {
+        const first = index.getX(offset)
+        const second = index.getX(offset + 1)
+        const third = index.getX(offset + 2)
+        if (Math.max(masks[first] ?? 0, masks[second] ?? 0, masks[third] ?? 0) >= 0.1) {
+          visibleIndices.push(first, second, third)
+        }
+      }
+      geometry.setIndex(visibleIndices)
+    }
     geometry.computeBoundingSphere()
     const water = new THREE.Mesh(geometry, this.waterMaterial)
     water.name = 'AnimatedDarkTealWater'

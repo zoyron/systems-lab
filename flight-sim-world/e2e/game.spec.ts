@@ -27,7 +27,7 @@ test('uses the flight toy controls, state-coupled instruments, audio preference,
   expect(webgl.height).toBeGreaterThan(0)
   await page.screenshot({ path: testInfo.outputPath('windward-first-load.png') })
 
-  await page.locator('[data-hud-action="begin"]').click()
+  await page.keyboard.press('Enter')
   await expect(page.locator('[data-begin-card]')).toBeHidden()
   await expect(page.locator('[data-debug-muted]')).toHaveText('false')
   await expect(page.locator('[data-debug-grounded]')).toHaveText('true')

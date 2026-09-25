@@ -58,6 +58,21 @@ export type FlightControls = {
   flaps?: number
 }
 
+export type ResolvedFlightControls = {
+  throttle: number
+  throttleInput: number
+  pitch: number
+  roll: number
+  yaw: number
+  brakes: number
+  reverse: boolean
+  boost: boolean
+  pitchActive: boolean
+  rollActive: boolean
+  yawActive: boolean
+  flaps: number
+}
+
 export type FlightEventType =
   | 'takeoff'
   | 'touchdown'
@@ -205,6 +220,20 @@ export class FlightModel {
   private filteredYaw = 0
   private pitchAngularVelocity = 0
   private rollAngularVelocity = 0
+  private readonly normalizedInput: NormalizedControls = {
+    throttle: 0,
+    throttleInput: 0,
+    pitch: 0,
+    roll: 0,
+    yaw: 0,
+    brakes: 0,
+    reverse: 0,
+    boost: false,
+    pitchActive: false,
+    rollActive: false,
+    yawActive: false,
+    flaps: 0,
+  }
   private readonly filteredControls: NormalizedControls = {
     throttle: 0,
     throttleInput: 0,
@@ -302,20 +331,36 @@ export class FlightModel {
   }
 
   get controlState(): FlightControls {
-    return {
-      throttle: this.state.throttle,
+    return this.writeControlState({
+      throttle: 0,
       throttleInput: 0,
-      pitch: this.filteredPitch,
-      roll: this.filteredRoll,
-      yaw: this.filteredYaw,
-      brakes: this.state.brakes,
+      pitch: 0,
+      roll: 0,
+      yaw: 0,
+      brakes: 0,
       reverse: false,
-      boost: this.state.throttle >= 1,
-      pitchActive: Math.abs(this.filteredPitch) > 0.01,
-      rollActive: Math.abs(this.filteredRoll) > 0.01,
-      yawActive: Math.abs(this.filteredYaw) > 0.01,
-      flaps: this.state.flaps,
-    }
+      boost: false,
+      pitchActive: false,
+      rollActive: false,
+      yawActive: false,
+      flaps: 0,
+    })
+  }
+
+  writeControlState(target: ResolvedFlightControls): ResolvedFlightControls {
+    target.throttle = this.state.throttle
+    target.throttleInput = 0
+    target.pitch = this.filteredPitch
+    target.roll = this.filteredRoll
+    target.yaw = this.filteredYaw
+    target.brakes = this.state.brakes
+    target.reverse = false
+    target.boost = this.state.throttle >= 1
+    target.pitchActive = Math.abs(this.filteredPitch) > 0.01
+    target.rollActive = Math.abs(this.filteredRoll) > 0.01
+    target.yawActive = Math.abs(this.filteredYaw) > 0.01
+    target.flaps = this.state.flaps
+    return target
   }
 
   get isCrashed(): boolean {
@@ -404,22 +449,21 @@ export class FlightModel {
   }
 
   private normalizeControls(controls: FlightControls): NormalizedControls {
+    const target = this.normalizedInput
     const throttleInput = clamp(finiteOrZero(controls.throttleInput ?? controls.throttleAxis), -1, 1)
-    const reverse = brakeAmount(controls.reverse ?? (throttleInput < 0 ? true : false))
-    return {
-      throttle: clamp(controls.boost === true ? 1 : finiteOrZero(controls.throttle), 0, 1),
-      throttleInput,
-      pitch: clamp(finiteOrZero(controls.pitch ?? controls.elevator), -1, 1),
-      roll: clamp(finiteOrZero(controls.roll ?? controls.aileron), -1, 1),
-      yaw: clamp(finiteOrZero(controls.yaw ?? controls.rudder), -1, 1),
-      brakes: brakeAmount(controls.brakes ?? controls.brake),
-      reverse,
-      boost: controls.boost === true,
-      pitchActive: controls.pitchActive ?? Math.abs(controls.pitch ?? controls.elevator ?? 0) > 0.01,
-      rollActive: controls.rollActive ?? Math.abs(controls.roll ?? controls.aileron ?? 0) > 0.01,
-      yawActive: controls.yawActive ?? Math.abs(controls.yaw ?? controls.rudder ?? 0) > 0.01,
-      flaps: clamp(finiteOrZero(controls.flaps), 0, 1),
-    }
+    target.throttle = clamp(controls.boost === true ? 1 : finiteOrZero(controls.throttle), 0, 1)
+    target.throttleInput = throttleInput
+    target.pitch = clamp(finiteOrZero(controls.pitch ?? controls.elevator), -1, 1)
+    target.roll = clamp(finiteOrZero(controls.roll ?? controls.aileron), -1, 1)
+    target.yaw = clamp(finiteOrZero(controls.yaw ?? controls.rudder), -1, 1)
+    target.brakes = brakeAmount(controls.brakes ?? controls.brake)
+    target.reverse = brakeAmount(controls.reverse ?? (throttleInput < 0 ? true : false))
+    target.boost = controls.boost === true
+    target.pitchActive = controls.pitchActive ?? Math.abs(controls.pitch ?? controls.elevator ?? 0) > 0.01
+    target.rollActive = controls.rollActive ?? Math.abs(controls.roll ?? controls.aileron ?? 0) > 0.01
+    target.yawActive = controls.yawActive ?? Math.abs(controls.yaw ?? controls.rudder ?? 0) > 0.01
+    target.flaps = clamp(finiteOrZero(controls.flaps), 0, 1)
+    return target
   }
 
   private integrate(dt: number, targetControls: NormalizedControls): FlightEvent | null {

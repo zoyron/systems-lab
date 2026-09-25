@@ -211,6 +211,7 @@ export class AircraftVisual {
   private readonly mainWheels: readonly [THREE.Group, THREE.Group]
   private readonly noseWheel: THREE.Group
   private readonly landingStruts: LandingStrut[] = []
+  private readonly strutAnchor = new THREE.Vector3()
   private readonly exhaustPuffs: ExhaustPuff[] = []
   private readonly redLightMaterial: THREE.MeshStandardMaterial
   private readonly greenLightMaterial: THREE.MeshStandardMaterial
@@ -900,9 +901,9 @@ export class AircraftVisual {
 
   private updateLandingStruts(): void {
     for (const strut of this.landingStruts) {
-      const anchor = strut.anchor.clone()
-      anchor.y += this.airframe.position.y
-      setRodBetween(strut.mesh, anchor, strut.axle)
+      this.strutAnchor.copy(strut.anchor)
+      this.strutAnchor.y += this.airframe.position.y
+      setRodBetween(strut.mesh, this.strutAnchor, strut.axle)
     }
   }
 
